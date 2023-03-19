@@ -1,6 +1,6 @@
 
 <p align="center">
-  <a href="https://paraswap.io">
+  <a href="https://fibrous.finance">
     <img src="https://github.com/Fibrous-Finance/fibrous-landing-v2/blob/main/src/assets/fibrous-logo.png" width="400px" >
   </a>
 </p>
