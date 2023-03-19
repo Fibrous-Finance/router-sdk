@@ -1,6 +1,6 @@
 {
   "name": "@fibrous/router-sdk",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "An sdk for routing swaps using Fibrous Algorithm.",
   "main": "dist/index.js",
   "module": "dist/index.m.js",
