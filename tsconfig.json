@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "module": "CommonJS",
+        "declaration": true,
+        "removeComments": true,
+        "allowSyntheticDefaultImports": true,
+        "target": "ES2017",
+        "sourceMap": false,
+        "outDir": "./dist",
+        "baseUrl": "./",
+        "experimentalDecorators": true,
+    },
+    "include": [
+        "src/**/*"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}

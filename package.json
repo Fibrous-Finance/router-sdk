@@ -1,0 +1,21 @@
+{
+  "name": "@fibrous/router-sdk",
+  "version": "0.0.1",
+  "description": "An sdk for routing swaps using Fibrous Algorithm.",
+  "main": "dist/index.js",
+  "module": "dist/index.m.js",
+  "types": "dist/index.d.ts",
+  "unpkg" : "dist/index.umd.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rm rf dist && microbundle --tsconfig tsconfig.json --no-sourcemap"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "microbundle": "^0.15.1"
+  }
+}
