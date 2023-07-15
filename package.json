@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "module": "dist/index.m.js",
   "types": "dist/index.d.ts",
-  "unpkg" : "dist/index.umd.js",
+  "unpkg": "dist/index.umd.js",
   "files": [
     "dist"
   ],
@@ -17,5 +17,8 @@
   "license": "ISC",
   "devDependencies": {
     "microbundle": "^0.15.1"
+  },
+  "dependencies": {
+    "starknet": "^5.14.1"
   }
 }
