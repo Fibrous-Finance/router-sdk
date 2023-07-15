@@ -1,4 +1,4 @@
-export interface Token {
+export type Token = {
     // Name of the token
     name: string;
 
