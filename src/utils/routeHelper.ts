@@ -1,41 +1,41 @@
 import {
-    RouteConfig,
-    RouteResponse,
+    RouteOptions,
     RouterResponse,
-    RouterError,
     CairoSwap,
     Percent,
 } from "../types";
 import { BigNumberish, uint256 } from "starknet";
 
-export async function routeRequest<T>(
-    url: string,
-    params: RouteConfig
-): Promise<RouteResponse | RouterError> {
-    const requestUrl =
-        url +
-        "?" +
-        Object.keys(params)
-            .map((key) => key + "=" + params[key])
-            .join("&");
-    const res = await fetch(requestUrl);
-    return res.json();
+/** Adds route options to the url
+ * @param url: Route URL
+ * @param options: Options for the route
+ * @returns Final URL
+ */
+export const buildRouteUrl = (url: string, params: RouteOptions): string => {
+    const requestParams = Object.keys(params)
+        .map((key) => `${key}=${params[key]}`)
+        .join("&");
+    return `${url}?${requestParams}`;
 }
 
+/** Removes % from the percent */
 export const trimPercent = (p: Percent): number => Number(p.replace("%", ""));
+
+/** Adds % to the percent */
 export const parsePercent = (p: number): string =>
     String(Math.floor(Number(p.toFixed(4)) * 1_000_000));
+
 
 /**
  * Formats the response from the Fibrous API into a flattened array of swaps
  * @param res Response from the Fibrous API
  * @returns Flattened array of swaps, ready to be passed to the Starknet contract
  */
-export function formatRouterCall(
+export function buildSwapCalldata(
     res: RouterResponse,
     slippage: number,
     destination: string
-): any[] {
+): string[] {
     const SLIPPAGE_EXTENSION = 10 ** 6;
 
     /** Converts a BigNumber string to Uint256 array [low, high] */
@@ -64,7 +64,6 @@ export function formatRouterCall(
             // Invariant: remainingSwapPercent >= 0
             // Proof by induction: base case is true, and we decrease remainingSwapPercent
             // by swapPercent in each iteration, so it will eventually reach 0.
-
             for (const swap of hop) {
                 const swapPercent = trimPercent(swap.percent);
                 const swapExecPercent =
@@ -95,5 +94,5 @@ export function formatRouterCall(
         ...makeU256(res.inputAmount),
         ...makeU256(minReceived),
         destination,
-    ];
+    ] as string[];
 }
