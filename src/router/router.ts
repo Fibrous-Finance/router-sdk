@@ -33,7 +33,7 @@ export class Router {
         const excludeProtocols = (options.excludeProtocols ?? []).join(",");
         const routeParams = Object.assign(
             options,
-            excludeProtocols.length > 0 ? { excludeProtocols } : {}
+            excludeProtocols.length > 0 ? { excludeProtocols } : {},
         );
         const routeUrl = buildRouteUrl(`${this.apiUrl}/route`, routeParams);
         return await fetch(routeUrl, {
@@ -52,7 +52,7 @@ export class Router {
         // Create a record of tokens by symbol
         return tokens.reduce(
             (acc, token) => Object.assign(acc, { [token.symbol]: token }),
-            {}
+            {},
         );
     }
 
@@ -68,7 +68,7 @@ export class Router {
         return protocols.reduce(
             (acc, protocol, idx) =>
                 Object.assign(acc, { [protocol]: (idx + 1) as ProtocolId }),
-            {}
+            {},
         );
     }
 
@@ -84,7 +84,7 @@ export class Router {
             call_data: buildSwapCalldata(
                 config.route,
                 config.slippage,
-                config.accountAddress
+                config.accountAddress,
             ),
         };
     }

@@ -30,7 +30,7 @@ describe("Router", () => {
             mockFetchWith([
                 { symbol: "eth", address: "0x1" },
                 { symbol: "dai", address: "0x2" },
-            ])
+            ]),
         );
         const tokens = await router.supportedTokens();
 
@@ -43,10 +43,10 @@ describe("Router", () => {
     it("Should return best route", async () => {
         const mockRouteData = fs.readFileSync(
             "./tests/mock/routeResponse.json",
-            "utf-8"
+            "utf-8",
         );
         globalFetch.mockImplementationOnce(
-            mockFetchWith(JSON.parse(mockRouteData))
+            mockFetchWith(JSON.parse(mockRouteData)),
         );
 
         const route = await router.getBestRoute({
@@ -56,7 +56,7 @@ describe("Router", () => {
         });
         expect(globalFetch).lastCalledWith(
             `${router.DEFAULT_API_URL}/route?amount=1&tokenInAddress=0x1&tokenOutAddress=0x2`,
-            { headers: {} }
+            { headers: {} },
         );
         expect(route).toEqual(JSON.parse(mockRouteData));
     });
@@ -64,10 +64,10 @@ describe("Router", () => {
     it("Should convert route to transaction", async () => {
         const mockRouteData = fs.readFileSync(
             "./tests/mock/routeResponse.json",
-            "utf-8"
+            "utf-8",
         );
         globalFetch.mockImplementationOnce(
-            mockFetchWith(JSON.parse(mockRouteData))
+            mockFetchWith(JSON.parse(mockRouteData)),
         );
 
         const route = await router.getBestRoute({

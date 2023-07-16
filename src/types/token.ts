@@ -16,7 +16,7 @@ export type Token = {
 
     // If the token is native (ETH on Ethereum)
     isNative: boolean;
-    
+
     // Price in USD
     price: number;
 };

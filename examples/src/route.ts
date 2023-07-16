@@ -1,7 +1,6 @@
 import type { RouteOptions } from "@fibrous/router-sdk";
 import { Router as FibrousRouter } from "@fibrous/router-sdk";
 
-
 async function main() {
     // Create a new router instance
     const fibrous = new FibrousRouter();

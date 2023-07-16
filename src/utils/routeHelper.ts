@@ -1,9 +1,4 @@
-import {
-    RouteOptions,
-    RouterResponse,
-    CairoSwap,
-    Percent,
-} from "../types";
+import { RouteOptions, RouterResponse, CairoSwap, Percent } from "../types";
 import { BigNumberish, uint256 } from "starknet";
 
 /**
@@ -17,18 +12,18 @@ export const buildRouteUrl = (url: string, params: RouteOptions): string => {
         .map((key) => `${key}=${params[key]}`)
         .join("&");
     return `${url}?${requestParams}`;
-}
+};
 
 /**
  * Builds headers for the request
  * @param apiKey Optional API key
- * @returns Headers for the request 
+ * @returns Headers for the request
  */
 export const buildHeaders = (apiKey?: string): Record<string, string> => {
     const headers = {};
     if (apiKey != null) headers["X-API-Key"] = apiKey;
     return headers;
-}
+};
 
 /** Removes % from the percent */
 export const trimPercent = (p: Percent): number => Number(p.replace("%", ""));
@@ -36,7 +31,6 @@ export const trimPercent = (p: Percent): number => Number(p.replace("%", ""));
 /** Adds % to the percent */
 export const parsePercent = (p: number): string =>
     String(Math.floor(Number(p.toFixed(4)) * 1_000_000));
-
 
 /**
  * Formats the response from the Fibrous API into a flattened array of swaps
@@ -46,7 +40,7 @@ export const parsePercent = (p: number): string =>
 export function buildSwapCalldata(
     res: RouterResponse,
     slippage: number,
-    destination: string
+    destination: string,
 ): string[] {
     const SLIPPAGE_EXTENSION = 10 ** 6;
 
