@@ -1,14 +1,37 @@
-import { Router } from "../router";
-import {  TransactionConfig } from "../types";
-import { EXAMPLE_TX_CONFIG, SMART_ORDER_ROUTER_API } from "./constant";
+import { Router as FibrousRouter } from "../router";
+import { RouteOptions } from "../types";
 
-function main(url: string, config: TransactionConfig) {
+import { randomBytes } from "node:crypto";
+const randomStarknetAddress = () => `0x${randomBytes(32).toString("hex")}`;
+
+async function main() {
     // Create a new router instance
-    const router = new Router(url);
-    // Call the buildTransaction function
-    const tx = router.buildTransaction(config);
-    console.log("Transaction:",
-        tx);
+    const fibrous = new FibrousRouter();
+
+    // Build route options
+    const tokens = await fibrous.supportedTokens();
+    const opts: RouteOptions = {
+        amount: 1,
+        tokenInAddress: tokens["eth"].address,
+        tokenOutAddress: tokens["usdc"].address,
+    };
+
+    // Get a route using the getBestRoute method
+    const bestRoute = await fibrous.getBestRoute(opts);
+    if (bestRoute.success === false) {
+        console.error(bestRoute.errorMessage);
+        return;
+    }
+
+    // Call the buildTransaction method in order to build the transaction
+    const slippage = 0.5;
+    const receiverAddress = randomStarknetAddress();
+    const tx = fibrous.buildTransaction({
+        route: bestRoute,
+        slippage,
+        accountAddress: receiverAddress,
+    });
+    console.log("Transaction:", tx);
 }
 
-main(SMART_ORDER_ROUTER_API, EXAMPLE_TX_CONFIG);
+main();
