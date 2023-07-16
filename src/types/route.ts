@@ -3,12 +3,13 @@ import { ProtocolId } from "./enums";
 
 export type Percent = `${string}%`;
 
-export type RouteConfig = {
+export type RouteOptions = {
     amount: number;
     tokenInAddress: string;
     tokenOutAddress: string;
     reverse?: boolean;
-    direct: boolean;
+    direct?: boolean;
+    excludeProtocols?: ProtocolId[];
 };
 
 export type RouteResponse =
@@ -63,12 +64,11 @@ export type CairoSwap = [string, string, string, string, string];
 export type Transaction = {
     contractAddress: string;
     entryPoint: string;
-    call_data: CairoSwap[];
+    call_data: string[];
 };
 
 export type TransactionConfig = {
     route: RouterResponse;
     slippage: number;
     accountAddress: string;
-    routerAddress: string;
 };
