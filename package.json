@@ -1,7 +1,7 @@
 {
   "name": "@fibrous/router-sdk",
   "version": "0.1.0",
-  "description": "An sdk for routing swaps using Fibrous Algorithm.",
+  "description": "A Javascript SDK for Fibrous Finance",
   "main": "dist/index.js",
   "module": "dist/index.m.js",
   "types": "dist/index.d.ts",
@@ -10,13 +10,14 @@
     "dist"
   ],
   "scripts": {
-    "build": "rm rf dist && microbundle --tsconfig tsconfig.json --no-sourcemap"
+    "build": "rimraf dist && microbundle --tsconfig tsconfig.json"
   },
   "keywords": [],
-  "author": "",
+  "author": "kermo & zetsuboii",
   "license": "ISC",
   "devDependencies": {
-    "microbundle": "^0.15.1"
+    "microbundle": "^0.15.1",
+    "rimraf": "^5.0.1"
   },
   "dependencies": {
     "starknet": "^5.14.1"
