@@ -5,7 +5,7 @@
   </a>
 </p>
 
-# Fibrous Finance SDK (v0.1b)
+# Fibrous Finance SDK (v0.2b)
 
 ## Installation
 
@@ -21,4 +21,9 @@ pnpm add fibrous-sdk
 ```
 
 ## Usage
+
 Check out the [examples](./examples) folder for more detailed examples.
+
+## Contributing
+
+We welcome contributions from the community. Please review our [contributing guidelines](./docs/CONTRIBUTING.md) to get started.
