@@ -11,13 +11,13 @@
 
 ```bash
 # NPM
-npm install fibrous-sdk
+npm install fibrous-router-sdk
 
 # Yarn
-yarn add fibrous-sdk
+yarn add fibrous-router-sdk
 
 # PNPM
-pnpm add fibrous-sdk
+pnpm add fibrous-router-sdk
 ```
 
 ## Usage

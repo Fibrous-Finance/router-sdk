@@ -1,12 +1,12 @@
 {
   "name": "fibrous-sdk-examples",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Examples for using Fibrous SDK",
   "main": "index.js",
   "author": "kermo & zetsuboii",
   "license": "MIT",
   "private": false,
   "dependencies": {
-    "@fibrous/router-sdk": "../"
+    "fibrous-router-sdk": "^0.2.0"
   }
 }
