@@ -1,4 +1,4 @@
-import { buildRouteUrl, buildSwapCalldata } from "../utils";
+import { buildHeaders, buildRouteUrl, buildSwapCalldata } from "../utils";
 import {
     RouteOptions,
     RouteResponse,
@@ -31,10 +31,13 @@ export class Router {
      */
     async getBestRoute(options: RouteOptions): Promise<RouteResponse> {
         const excludeProtocols = (options.excludeProtocols ?? []).join(",");
-        const routeParams = Object.assign(options, { excludeProtocols });
+        const routeParams = Object.assign(
+            options,
+            excludeProtocols.length > 0 ? { excludeProtocols } : {}
+        );
         const routeUrl = buildRouteUrl(`${this.apiUrl}/route`, routeParams);
         return await fetch(routeUrl, {
-            headers: { "X-API-Key": this.apiKey },
+            headers: buildHeaders(this.apiKey),
         }).then((response) => response.json());
     }
 
@@ -43,7 +46,7 @@ export class Router {
      */
     async supportedTokens(): Promise<Record<string, Token>> {
         const tokens: Token[] = await fetch(`${this.apiUrl}/tokens`, {
-            headers: { "X-API-Key": this.apiKey },
+            headers: buildHeaders(this.apiKey),
         }).then((response) => response.json());
 
         // Create a record of tokens by symbol
@@ -58,7 +61,7 @@ export class Router {
      */
     async supportedProtocols(): Promise<Record<string, ProtocolId>> {
         const protocols: string[] = await fetch(`${this.apiUrl}/protocols`, {
-            headers: { "X-API-Key": this.apiKey },
+            headers: buildHeaders(this.apiKey),
         }).then((response) => response.json());
 
         // Create a record of protocols, starting from 1

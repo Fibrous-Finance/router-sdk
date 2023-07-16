@@ -6,7 +6,8 @@ import {
 } from "../types";
 import { BigNumberish, uint256 } from "starknet";
 
-/** Adds route options to the url
+/**
+ * Adds route options to the url
  * @param url: Route URL
  * @param options: Options for the route
  * @returns Final URL
@@ -16,6 +17,17 @@ export const buildRouteUrl = (url: string, params: RouteOptions): string => {
         .map((key) => `${key}=${params[key]}`)
         .join("&");
     return `${url}?${requestParams}`;
+}
+
+/**
+ * Builds headers for the request
+ * @param apiKey Optional API key
+ * @returns Headers for the request 
+ */
+export const buildHeaders = (apiKey?: string): Record<string, string> => {
+    const headers = {};
+    if (apiKey != null) headers["X-API-Key"] = apiKey;
+    return headers;
 }
 
 /** Removes % from the percent */
