@@ -1,7 +1,7 @@
 
 <p align="center">
   <a href="https://fibrous.finance">
-    <img src="./assets/logo.png" width="400px" >
+    <img src="./docs/assets/logo.png" width="400px" >
   </a>
 </p>
 
