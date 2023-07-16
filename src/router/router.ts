@@ -1,11 +1,12 @@
 import { buildHeaders, buildRouteUrl, buildSwapCalldata } from "../utils";
 import {
-    RouteOptions,
+    RouteParams,
     RouteResponse,
     Token,
     Transaction,
-    TransactionConfig,
     ProtocolId,
+    RouteOverrides,
+    RouteSuccess,
 } from "../types";
 
 export class Router {
@@ -26,15 +27,37 @@ export class Router {
 
     /**
      * Gets the best route from the API
-     * @param options: Options for the route
-     * @throws
+     * @param amount: Amount to swap, formatted
+     * @param tokenInAddress: Token to swap from
+     * @param tokenOutAddress: Token to swap to
+     * @param options: Optional parameters
+     * @returns Route response
+     * @throws Error if the API returns an error
      */
-    async getBestRoute(options: RouteOptions): Promise<RouteResponse> {
-        const excludeProtocols = (options.excludeProtocols ?? []).join(",");
-        const routeParams = Object.assign(
-            options,
-            excludeProtocols.length > 0 ? { excludeProtocols } : {},
-        );
+    async getBestRoute(
+        amount: number,
+        tokenInAddress: string,
+        tokenOutAddress: string,
+        options?: Partial<RouteOverrides>,
+    ): Promise<RouteResponse> {
+        // Create params object
+        const routeParams: RouteParams = {
+            amount,
+            tokenInAddress,
+            tokenOutAddress,
+        };
+
+        // Add optional parameters
+        for (const [key, value] of Object.entries(options ?? {})) {
+            if (key == "excludeProtocols") {
+                routeParams.excludeProtocols = (value as ProtocolId[]).join(
+                    ",",
+                );
+                continue;
+            }
+            routeParams[key as any] = value;
+        }
+
         const routeUrl = buildRouteUrl(`${this.apiUrl}/route`, routeParams);
         return await fetch(routeUrl, {
             headers: buildHeaders(this.apiKey),
@@ -74,18 +97,19 @@ export class Router {
 
     /**
      * Builds a Starknet transaction out of the route response
-     * @param config: Transaction configuration
-     * @returns Starknet transaction
+     * @param route: Route response
+     * @param slippage: Slippage percentage (0.01 = 1%)
+     * @param receiverAddress: Address to receive the tokens
      */
-    buildTransaction(config: TransactionConfig): Transaction {
+    buildTransaction(
+        route: RouteSuccess,
+        slippage: number,
+        receiverAddress: string,
+    ): Transaction {
         return {
             contractAddress: this.ROUTER_ADDRESS,
             entryPoint: "swap",
-            call_data: buildSwapCalldata(
-                config.route,
-                config.slippage,
-                config.accountAddress,
-            ),
+            call_data: buildSwapCalldata(route, slippage, receiverAddress),
         };
     }
 }

@@ -3,32 +3,26 @@ import { ProtocolId } from "./enums";
 
 export type Percent = `${string}%`;
 
-export type RouteOptions = {
+export type RouteOverrides = {
+    reverse: boolean;
+    direct: boolean;
+    excludeProtocols: ProtocolId[];
+};
+
+export type RouteParams = {
     amount: number;
     tokenInAddress: string;
     tokenOutAddress: string;
-    reverse?: boolean;
-    direct?: boolean;
-    excludeProtocols?: ProtocolId[];
+} & Partial<
+    Omit<RouteOverrides, "excludeProtocols"> & { excludeProtocols: string }
+>;
+
+export type RouteFailure = {
+    success: false;
+    errorMessage: string;
 };
 
-export type RouteResponse =
-    | {
-          success: false;
-          errorMessage: string;
-      }
-    | {
-          success: true;
-          inputToken: Token;
-          inputAmount: string;
-          outputToken: Token;
-          outputAmount: string;
-          estimatedGasUsed: string;
-          route: Route[];
-          time: number;
-      };
-
-export type RouterResponse = {
+export type RouteSuccess = {
     success: true;
     inputToken: Token;
     inputAmount: string;
@@ -39,10 +33,9 @@ export type RouterResponse = {
     time: number;
 };
 
-export type RouterError = {
-    statusCode: number;
-    error: string;
-};
+export type RouteResponse =
+    | RouteFailure
+    | RouteSuccess;
 
 export type Route = {
     percent: Percent;
@@ -68,7 +61,7 @@ export type Transaction = {
 };
 
 export type TransactionConfig = {
-    route: RouterResponse;
+    route: RouteSuccess;
     slippage: number;
     accountAddress: string;
 };

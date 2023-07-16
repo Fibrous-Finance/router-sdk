@@ -15,6 +15,17 @@ describe("Router", () => {
         router = new Router();
     });
 
+    it("Should make calls with the correct headers", async () => {
+        const routerWithApiKey = new Router(router.DEFAULT_API_URL, "api-key");
+        globalFetch.mockImplementationOnce(mockFetchWith([]));
+        await routerWithApiKey.supportedProtocols();
+
+        expect(globalFetch).lastCalledWith(
+            `${routerWithApiKey.DEFAULT_API_URL}/protocols`,
+            { headers: { "X-API-Key": "api-key" } },
+        );
+    });
+
     it("Should return supported protocols", async () => {
         globalFetch.mockImplementationOnce(mockFetchWith(["amm1", "amm2"]));
         const protocols = await router.supportedProtocols();
@@ -49,16 +60,42 @@ describe("Router", () => {
             mockFetchWith(JSON.parse(mockRouteData)),
         );
 
-        const route = await router.getBestRoute({
-            amount: 1,
-            tokenInAddress: "0x1",
-            tokenOutAddress: "0x2",
-        });
+        const route = await router.getBestRoute(1, "0x1", "0x2");
         expect(globalFetch).lastCalledWith(
             `${router.DEFAULT_API_URL}/route?amount=1&tokenInAddress=0x1&tokenOutAddress=0x2`,
             { headers: {} },
         );
         expect(route).toEqual(JSON.parse(mockRouteData));
+    });
+
+    it("Should return best route with overrides", async () => {
+        globalFetch.mockImplementationOnce(mockFetchWith(["amm1", "amm2"]));
+        const protocols = await router.supportedProtocols();
+
+        const mockRouteData = fs.readFileSync(
+            "./tests/mock/routeResponse.json",
+            "utf-8",
+        );
+        globalFetch.mockImplementation(
+            mockFetchWith(JSON.parse(mockRouteData)),
+        );
+
+        const route = await router.getBestRoute(1, "0x1", "0x2", {
+            excludeProtocols: [protocols.amm1],
+        });
+        expect(globalFetch).lastCalledWith(
+            `${router.DEFAULT_API_URL}/route?amount=1&tokenInAddress=0x1&tokenOutAddress=0x2&excludeProtocols=1`,
+            { headers: {} },
+        );
+        expect(route).toEqual(JSON.parse(mockRouteData));
+
+        await router.getBestRoute(1, "0x1", "0x2", {
+            excludeProtocols: [protocols.amm1, protocols.amm2],
+        });
+        expect(globalFetch).lastCalledWith(
+            `${router.DEFAULT_API_URL}/route?amount=1&tokenInAddress=0x1&tokenOutAddress=0x2&excludeProtocols=1,2`,
+            { headers: {} },
+        );
     });
 
     it("Should convert route to transaction", async () => {
@@ -70,20 +107,12 @@ describe("Router", () => {
             mockFetchWith(JSON.parse(mockRouteData)),
         );
 
-        const route = await router.getBestRoute({
-            amount: 1,
-            tokenInAddress: "0x1",
-            tokenOutAddress: "0x2",
-        });
+        const route = await router.getBestRoute(1, "0x1", "0x2");
         expect(route.success).toEqual(true);
         if (route.success === false) return;
         expect(route.outputAmount).toEqual("2000000000000000000000");
 
-        const transaction = router.buildTransaction({
-            route,
-            slippage: 0.05,
-            accountAddress: "0x3",
-        });
+        const transaction = router.buildTransaction(route, 0.05, "0x3");
         expect(transaction).toEqual({
             contractAddress: router.ROUTER_ADDRESS,
             entryPoint: "swap",
