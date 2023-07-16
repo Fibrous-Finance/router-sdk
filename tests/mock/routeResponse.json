@@ -1,0 +1,48 @@
+{
+    "success": true,
+    "inputToken": {
+        "address": "0x1",
+        "decimals": 18,
+        "isBase": true,
+        "isNative": true,
+        "name": "ethereum",
+        "symbol": "eth",
+        "price": 2000
+    },
+    "inputAmount": "1000000000000000000",
+    "outputToken": {
+        "address": "0x2",
+        "decimals": 18,
+        "isBase": true,
+        "isNative": false,
+        "name": "dai",
+        "symbol": "dai",
+        "price": 1
+    },
+    "outputAmount": "2000000000000000000000",
+    "time": 0.05,
+    "estimatedGasUsed": "0",
+    "route": [
+        {
+            "percent": "100%",
+            "swaps": [
+                [
+                    {
+                        "protocol": 2,
+                        "poolId": "2:0xPOOL:0x1:0x2",
+                        "poolAddress": "0xPOOL",
+                        "fromTokenAddress": "0x1",
+                        "toTokenAddress": "0x2",
+                        "percent": "100.00%"
+                    }
+                ]
+            ]
+        }
+    ],
+    "bestQuotesByProtocols": [
+        "1928090696",
+        "1922511322",
+        "1891225370",
+        "1924237741"
+    ]
+}
