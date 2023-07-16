@@ -1,4 +1,4 @@
-import { Router as FibrousRouter } from "../router";
+import { Router as FibrousRouter } from "@fibrous/router-sdk";
 
 // Example of getting an object of supported protocols
 async function main() {

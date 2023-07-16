@@ -1,5 +1,5 @@
-import { Router as FibrousRouter } from "../router";
-import { RouteOptions } from "../types";
+import type { RouteOptions } from "@fibrous/router-sdk";
+import { Router as FibrousRouter } from "@fibrous/router-sdk";
 
 import { randomBytes } from "node:crypto";
 const randomStarknetAddress = () => `0x${randomBytes(32).toString("hex")}`;
