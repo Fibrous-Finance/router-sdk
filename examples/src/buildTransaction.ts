@@ -1,4 +1,3 @@
-import type { RouteOptions } from "fibrous-router-sdk";
 import { Router as FibrousRouter } from "fibrous-router-sdk";
 
 import { randomBytes } from "node:crypto";
@@ -10,14 +9,13 @@ async function main() {
 
     // Build route options
     const tokens = await fibrous.supportedTokens();
-    const opts: RouteOptions = {
-        amount: 1,
-        tokenInAddress: tokens["eth"].address,
-        tokenOutAddress: tokens["usdc"].address,
-    };
 
     // Get a route using the getBestRoute method
-    const bestRoute = await fibrous.getBestRoute(opts);
+    const bestRoute = await fibrous.getBestRoute(
+        1,
+        tokens["eth"].address,
+        tokens["usdc"].address,
+    );
     if (bestRoute.success === false) {
         console.error(bestRoute.errorMessage);
         return;
@@ -26,11 +24,7 @@ async function main() {
     // Call the buildTransaction method in order to build the transaction
     const slippage = 0.5;
     const receiverAddress = randomStarknetAddress();
-    const tx = fibrous.buildTransaction({
-        route: bestRoute,
-        slippage,
-        accountAddress: receiverAddress,
-    });
+    const tx = fibrous.buildTransaction(bestRoute, slippage, receiverAddress);
     console.log("Transaction:", tx);
 }
 
