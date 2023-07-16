@@ -14,7 +14,7 @@
   },
   "keywords": [],
   "author": "kermo & zetsuboii",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "microbundle": "^0.15.1",
     "rimraf": "^5.0.1"

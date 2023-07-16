@@ -4,7 +4,7 @@
   "description": "Examples for using Fibrous SDK",
   "main": "index.js",
   "author": "kermo & zetsuboii",
-  "license": "ISC",
+  "license": "MIT",
   "private": false,
   "dependencies": {
     "@fibrous/router-sdk": "../"
