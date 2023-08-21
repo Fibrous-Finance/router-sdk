@@ -36,10 +36,12 @@ import { BigNumber } from "@ethersproject/bignumber";
 import { parseUnits } from "ethers";
 
 const router = new FibrousRouter();
+
 const tokenInAddress = tokens["eth"].address;
 const tokenOutAddress = tokens["usdc"].address;
 const tokenInDecimals = tokens["eth"].decimals;
-const inputAmount = parseUnits("1", tokenInDecimals);
+const inputAmount = BigNumber.from(parseUnits("1", tokenInDecimals));
+
 const route = await fibrous.getBestRoute(
             inputAmount, // amount 
             tokenInAddress, // token input
@@ -58,10 +60,12 @@ import { BigNumber } from "@ethersproject/bignumber";
 import { parseUnits } from "ethers";
 
 const fibrous = new FibrousRouter();
+
 const tokenInAddress = tokens["eth"].address;
 const tokenOutAddress = tokens["usdc"].address;
 const tokenInDecimals = tokens["eth"].decimals;
-const inputAmount = parseUnits("1", tokenInDecimals);
+const inputAmount = BigNumber.from(parseUnits("1", tokenInDecimals));
+
 // Build route options
 const tokens = await fibrous.supportedTokens();
 // Get a route using the getBestRoute method

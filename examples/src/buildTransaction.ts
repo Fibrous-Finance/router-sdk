@@ -1,4 +1,5 @@
-import { Router as FibrousRouter } from "fibrous-router-sdk";
+import { BigNumber } from "@ethersproject/bignumber";
+import { Router as FibrousRouter } from "../../src/router/router";
 import { parseUnits } from "ethers";
 
 import { randomBytes } from "node:crypto";
@@ -14,7 +15,7 @@ async function main() {
     const tokenInAddress = tokens["eth"].address;
     const tokenOutAddress = tokens["usdc"].address;
     const tokenInDecimals = tokens["eth"].decimals;
-    const inputAmount = parseUnits("1", tokenInDecimals);
+    const inputAmount = BigNumber.from(parseUnits("1", tokenInDecimals));
     // Get a route using the getBestRoute method
     const bestRoute = await fibrous.getBestRoute(
         inputAmount,
