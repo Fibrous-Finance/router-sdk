@@ -1,5 +1,6 @@
 import { Token } from "./token";
 import { ProtocolId } from "./enums";
+import { BigNumber } from "@ethersproject/bignumber";
 
 export type Percent = `${string}%`;
 
@@ -10,7 +11,7 @@ export type RouteOverrides = {
 };
 
 export type RouteParams = {
-    amount: number;
+    amount: BigNumber;
     tokenInAddress: string;
     tokenOutAddress: string;
 } & Partial<

@@ -8,7 +8,7 @@ import {
     RouteOverrides,
     RouteSuccess,
 } from "../types";
-
+import { BigNumber } from "@ethersproject/bignumber";
 export class Router {
     readonly DEFAULT_API_URL = "https://api.fibrous.finance";
     readonly ROUTER_ADDRESS =
@@ -35,7 +35,7 @@ export class Router {
      * @throws Error if the API returns an error
      */
     async getBestRoute(
-        amount: number,
+        amount: BigNumber,
         tokenInAddress: string,
         tokenOutAddress: string,
         options?: Partial<RouteOverrides>,

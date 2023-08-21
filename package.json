@@ -29,6 +29,8 @@
     "rimraf": "^5.0.1"
   },
   "dependencies": {
+    "@ethersproject/bignumber": "^5.7.0",
+    "ethers": "^6.7.1",
     "starknet": "^5.14.1"
   },
   "publishConfig": {
