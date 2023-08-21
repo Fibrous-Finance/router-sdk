@@ -21,7 +21,82 @@ pnpm add fibrous-router-sdk
 ```
 
 ## Usage
+Fetching Tokens
+```javascript
+import { Router as FibrousRouter } from "fibrous-router-sdk";
+const router = new FibrousRouter();
+const suportedTokens = await router.supportedTokens(); // returns array as token type (src/types/token.ts)
 
+```
+Fetching route
+```javascript
+import { Router as FibrousRouter } from "fibrous-router-sdk";
+const router = new FibrousRouter();
+const route = await fibrous.getBestRoute(
+            1.2, // amount 
+            tokens["eth"].address, // token input
+            tokens["usdc"].address, // token output
+        );
+// returns route type (src/types/route.ts)
+
+```
+
+Build transaction
+```javascript
+import { Router as FibrousRouter } from "fibrous-router-sdk";
+import { connect, disconnect } from '@argent/get-starknet'
+import { Account, Provider } from "starknet";
+
+const router = new FibrousRouter();
+const fibrous = new FibrousRouter();
+
+// Build route options
+const tokens = await fibrous.supportedTokens();
+console.log(tokens)
+// Get a route using the getBestRoute method
+const bestRoute = await fibrous.getBestRoute(
+    1,
+    tokens["eth"].address,
+    tokens["usdc"].address,
+);
+if (bestRoute.success === false) {
+    console.error(bestRoute.errorMessage);
+    return;
+}
+
+
+
+// Usege on your website
+
+const starknet = await connect({ showList: false }) 
+
+await starknet.enable()
+
+if (starknet.isConnected) {
+
+  // Call the buildTransaction method in order to build the transaction
+  const slippage = 0.5;
+  const receiverAddress = starknet.selectedAddress;
+  const tx = fibrous.buildTransaction(bestRoute, slippage, receiverAddress);
+
+  await starknet.account.execute(tx);
+}
+
+
+// Usage on backend
+
+const provider = new Provider();
+const privateKey0 = "YOUR_PRIVATE_KEY";
+const accountAddress0 = "YOUR_WALLET_ADDRESS";
+const account = new Account(provider, accountAddress0, privateKey0);
+
+// Call the buildTransaction method in order to build the transaction
+const slippage = 0.5;
+const tx = fibrous.buildTransaction(bestRoute, slippage, accountAddress0);
+
+await account.execute(tx)
+
+```
 Check out the [examples](./examples) folder for more detailed examples.
 
 ## Contributing
