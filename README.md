@@ -24,6 +24,7 @@ pnpm add fibrous-router-sdk
 Fetching Tokens
 ```javascript
 import { Router as FibrousRouter } from "fibrous-router-sdk";
+
 const router = new FibrousRouter();
 const suportedTokens = await router.supportedTokens(); // returns array as token type (src/types/token.ts)
 
@@ -31,11 +32,18 @@ const suportedTokens = await router.supportedTokens(); // returns array as token
 Fetching route
 ```javascript
 import { Router as FibrousRouter } from "fibrous-router-sdk";
+import { BigNumber } from "@ethersproject/bignumber";
+import { parseUnits } from "ethers";
+
 const router = new FibrousRouter();
+const tokenInAddress = tokens["eth"].address;
+const tokenOutAddress = tokens["usdc"].address;
+const tokenInDecimals = tokens["eth"].decimals;
+const inputAmount = parseUnits("1", tokenInDecimals);
 const route = await fibrous.getBestRoute(
-            1.2, // amount 
-            tokens["eth"].address, // token input
-            tokens["usdc"].address, // token output
+            inputAmount, // amount 
+            tokenInAddress, // token input
+            tokenOutAddress, // token output
         );
 // returns route type (src/types/route.ts)
 
@@ -46,19 +54,22 @@ Build transaction
 import { Router as FibrousRouter } from "fibrous-router-sdk";
 import { connect, disconnect } from '@argent/get-starknet'
 import { Account, Provider } from "starknet";
+import { BigNumber } from "@ethersproject/bignumber";
+import { parseUnits } from "ethers";
 
-const router = new FibrousRouter();
 const fibrous = new FibrousRouter();
-
+const tokenInAddress = tokens["eth"].address;
+const tokenOutAddress = tokens["usdc"].address;
+const tokenInDecimals = tokens["eth"].decimals;
+const inputAmount = parseUnits("1", tokenInDecimals);
 // Build route options
 const tokens = await fibrous.supportedTokens();
-console.log(tokens)
 // Get a route using the getBestRoute method
-const bestRoute = await fibrous.getBestRoute(
-    1,
-    tokens["eth"].address,
-    tokens["usdc"].address,
-);
+const route = await fibrous.getBestRoute(
+            inputAmount, // amount 
+            tokenInAddress, // token input
+            tokenOutAddress, // token output
+        );
 if (bestRoute.success === false) {
     console.error(bestRoute.errorMessage);
     return;
