@@ -92,9 +92,16 @@ if (starknet.isConnected) {
   // Call the buildTransaction method in order to build the transaction
   const slippage = 0.5;
   const receiverAddress = starknet.selectedAddress;
+
+  const approveToken = {
+      contractAddress: tokenInAddress,
+      entrypoint: "approve",
+      calldata: [fibrous.ROUTER_ADDRESS, amount.toString(), '0'],
+  };
+
   const tx = fibrous.buildTransaction(bestRoute, slippage, receiverAddress);
 
-  await starknet.account.execute(tx);
+  await starknet.account.execute([approveToken,tx]);
 }
 
 
@@ -109,7 +116,13 @@ const account = new Account(provider, accountAddress0, privateKey0);
 const slippage = 0.5;
 const tx = fibrous.buildTransaction(bestRoute, slippage, accountAddress0);
 
-await account.execute(tx)
+ const approveToken = {
+      contractAddress: tokenInAddress,
+      entrypoint: "approve",
+      calldata: [fibrous.ROUTER_ADDRESS, amount.toString(), '0'],
+  };
+
+await account.execute([approveToken, tx])
 
 ```
 Check out the [examples](./examples) folder for more detailed examples.
