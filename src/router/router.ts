@@ -1,18 +1,18 @@
-import { buildHeaders, buildRouteUrl, buildSwapCalldata } from "../utils";
+import { approveToERC20, buildHeaders, buildRouteUrl } from "../utils";
 import {
     RouteParams,
     RouteResponse,
     Token,
-    Transaction,
     ProtocolId,
     RouteOverrides,
-    RouteSuccess,
+    RouteExecuteParams,
 } from "../types";
 import { BigNumber } from "@ethersproject/bignumber";
+import { Call } from "starknet";
 export class Router {
     readonly DEFAULT_API_URL = "https://api.fibrous.finance";
     readonly ROUTER_ADDRESS =
-        "0x1b23ed400b210766111ba5b1e63e33922c6ba0c45e6ad56ce112e5f4c578e62";
+        "0x03201e8057a781dca378564b9d3bbe9b5b7617fac4ad9d9deaa1024cf63f877e";
 
     private readonly apiUrl: string;
     private readonly apiKey: string | null;
@@ -96,20 +96,62 @@ export class Router {
     }
 
     /**
+     * Builds a Starknet approve transaction
+     * @param amount: Amount to approve, formatted
+     * @param tokenAddress: Token to approve
+     */
+    async buildApprove(amount: BigNumber, tokenAddress: string): Promise<Call> {
+        const amountHex = amount.toHexString();
+        const approveCall = approveToERC20(
+            amountHex,
+            tokenAddress,
+            this.ROUTER_ADDRESS,
+        );
+        return approveCall;
+    }
+
+    /**
      * Builds a Starknet transaction out of the route response
      * @param route: Route response
      * @param slippage: Slippage percentage (0.01 = 1%)
      * @param receiverAddress: Address to receive the tokens
      */
-    buildTransaction(
-        route: RouteSuccess,
+    async buildTransaction(
+        inputAmount: BigNumber,
+        tokenInAddress: string,
+        tokenOutAddress: string,
         slippage: number,
-        receiverAddress: string,
-    ): Transaction {
+        destination: string,
+        options?: Partial<RouteOverrides>,
+    ): Promise<Call> {
+        const amount = inputAmount.toHexString();
+        const routeParams: RouteExecuteParams = {
+            amount,
+            tokenInAddress,
+            tokenOutAddress,
+            slippage,
+            destination,
+        };
+
+        // Add optional parameters
+        for (const [key, value] of Object.entries(options ?? {})) {
+            if (key == "excludeProtocols") {
+                routeParams.excludeProtocols = (value as ProtocolId[]).join(
+                    ",",
+                );
+                continue;
+            }
+            routeParams[key as any] = value;
+        }
+
+        const routeUrl = buildRouteUrl(`${this.apiUrl}/execute`, routeParams);
+        const calldata = await fetch(routeUrl, {
+            headers: buildHeaders(this.apiKey),
+        }).then((response) => response.json());
         return {
             contractAddress: this.ROUTER_ADDRESS,
-            entryPoint: "swap",
-            call_data: buildSwapCalldata(route, slippage, receiverAddress),
+            entrypoint: "swap",
+            calldata: calldata,
         };
     }
 }

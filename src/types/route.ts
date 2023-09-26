@@ -18,6 +18,16 @@ export type RouteParams = {
     Omit<RouteOverrides, "excludeProtocols"> & { excludeProtocols: string }
 >;
 
+export type RouteExecuteParams = {
+    amount: string;
+    tokenInAddress: string;
+    tokenOutAddress: string;
+    slippage: number;
+    destination: string;
+} & Partial<
+    Omit<RouteOverrides, "excludeProtocols"> & { excludeProtocols: string }
+>;
+
 export type RouteFailure = {
     success: false;
     errorMessage: string;
@@ -34,9 +44,7 @@ export type RouteSuccess = {
     time: number;
 };
 
-export type RouteResponse =
-    | RouteFailure
-    | RouteSuccess;
+export type RouteResponse = RouteFailure | RouteSuccess;
 
 export type Route = {
     percent: Percent;

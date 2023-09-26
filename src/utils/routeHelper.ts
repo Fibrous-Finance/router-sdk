@@ -1,4 +1,4 @@
-import { RouteParams, RouteSuccess, CairoSwap, Percent } from "../types";
+import { RouteParams, RouteSuccess, CairoSwap, Percent ,RouteExecuteParams} from "../types";
 import { BigNumberish, uint256 } from "starknet";
 
 /**
@@ -7,7 +7,7 @@ import { BigNumberish, uint256 } from "starknet";
  * @param options: Options for the route
  * @returns Final URL
  */
-export const buildRouteUrl = (url: string, params: RouteParams): string => {
+export const buildRouteUrl = (url: string, params: RouteParams | RouteExecuteParams): string => {
     const requestParams = Object.keys(params)
         .map((key) => `${key}=${params[key]}`)
         .join("&");

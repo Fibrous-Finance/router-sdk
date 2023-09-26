@@ -18,7 +18,7 @@ async function main() {
             tokenInAddress,
             tokenOutAddress,
         );
-        console.log("route",route);
+        console.log("route", route);
     } catch (error) {
         console.error(error);
     }
