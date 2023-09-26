@@ -3,7 +3,6 @@ import { Router as FibrousRouter } from "fibrous-router-sdk";
 import { parseUnits } from "ethers";
 import { Call } from "starknet";
 
-import { approveToERC20 } from "../../src/utils";
 import { account } from "./account";
 
 async function main() {
@@ -38,10 +37,9 @@ async function main() {
     // https://www.starknetjs.com/docs/guides/connect_account
     // If this account is based on a Cairo v2 contract (for example OpenZeppelin account 0.7.0 or later), do not forget to add the parameter "1" after the privateKey parameter
     const account0 = account(privateKey, public_key, "1");
-    const approveCall: Call = approveToERC20(
-        inputAmount.toString(),
+    const approveCall:Call = await fibrous.buildApprove(
+        inputAmount,
         tokenInAddress,
-        fibrous.ROUTER_ADDRESS,
     );
     const tx = await account0.execute([approveCall, swapCall]);
     console.log(tx);    

@@ -1,4 +1,3 @@
-
 <p align="center">
   <a href="https://fibrous.finance">
     <img src="./docs/assets/logo.png" width="400px" >
@@ -21,15 +20,18 @@ pnpm add fibrous-router-sdk
 ```
 
 ## Usage
+
 Fetching Tokens
+
 ```javascript
 import { Router as FibrousRouter } from "fibrous-router-sdk";
 
 const router = new FibrousRouter();
 const suportedTokens = await router.supportedTokens(); // returns array as token type (src/types/token.ts)
-
 ```
+
 Fetching route
+
 ```javascript
 import { Router as FibrousRouter } from "fibrous-router-sdk";
 import { BigNumber } from "@ethersproject/bignumber";
@@ -43,15 +45,15 @@ const tokenInDecimals = tokens["eth"].decimals;
 const inputAmount = BigNumber.from(parseUnits("1", tokenInDecimals));
 
 const route = await fibrous.getBestRoute(
-            inputAmount, // amount 
-            tokenInAddress, // token input
-            tokenOutAddress, // token output
-        );
+    inputAmount, // amount
+    tokenInAddress, // token input
+    tokenOutAddress, // token output
+);
 // returns route type (src/types/route.ts)
-
 ```
 
 Build transaction
+
 ```javascript
 import { Router as FibrousRouter } from "fibrous-router-sdk";
 import { connect, disconnect } from '@argent/get-starknet'
@@ -70,7 +72,7 @@ const inputAmount = BigNumber.from(parseUnits("1", tokenInDecimals));
 const tokens = await fibrous.supportedTokens();
 // Get a route using the getBestRoute method
 const route = await fibrous.getBestRoute(
-            inputAmount, // amount 
+            inputAmount, // amount
             tokenInAddress, // token input
             tokenOutAddress, // token output
         );
@@ -83,7 +85,7 @@ if (bestRoute.success === false) {
 
 // Usege on your website
 
-const starknet = await connect({ showList: false }) 
+const starknet = await connect({ showList: false })
 
 await starknet.enable()
 
@@ -93,15 +95,20 @@ if (starknet.isConnected) {
   const slippage = 0.5;
   const receiverAddress = starknet.selectedAddress;
 
-  const approveToken = {
-      contractAddress: tokenInAddress,
-      entrypoint: "approve",
-      calldata: [fibrous.ROUTER_ADDRESS, amount.toString(), '0'],
-  };
+  const approveCall:Call = await fibrous.buildApprove(
+      inputAmount,
+      tokenInAddress,
+  );
 
-  const tx = fibrous.buildTransaction(bestRoute, slippage, receiverAddress);
+  const swapCall = await fibrous.buildTransaction(
+    inputAmount,
+    tokenInAddress,
+    tokenOutAddress,
+    slippage, 
+    receiverAddress,
+  );
 
-  await starknet.account.execute([approveToken,tx]);
+  await starknet.account.execute([approveCall,tx]);
 }
 
 
@@ -114,17 +121,23 @@ const account = new Account(provider, accountAddress0, privateKey0);
 
 // Call the buildTransaction method in order to build the transaction
 const slippage = 0.5;
-const tx = fibrous.buildTransaction(bestRoute, slippage, accountAddress0);
+const swapCall = await fibrous.buildTransaction(
+    inputAmount,
+    tokenInAddress,
+    tokenOutAddress,
+    slippage,
+    receiverAddress,
+);
 
- const approveToken = {
-      contractAddress: tokenInAddress,
-      entrypoint: "approve",
-      calldata: [fibrous.ROUTER_ADDRESS, amount.toString(), '0'],
-  };
+const approveCall:Call = await fibrous.buildApprove(
+      inputAmount,
+      tokenInAddress,
+  );
 
-await account.execute([approveToken, tx])
+await account.execute([approveToken, swapCall])
 
 ```
+
 Check out the [examples](./examples) folder for more detailed examples.
 
 ## Contributing
