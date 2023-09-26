@@ -92,6 +92,9 @@ await starknet.enable()
 if (starknet.isConnected) {
 
   // Call the buildTransaction method in order to build the transaction
+  // slippage: The maximum acceptable slippage of the buyAmount amount. 
+  // slippage formula = slippage * 100
+  // value 0.005 is %0.5, 0.05 is 5%, 0.01 is %1, 0.001 is %0.1 ...
   const slippage = 0.5;
   const receiverAddress = starknet.selectedAddress;
 
@@ -120,6 +123,9 @@ const accountAddress0 = "YOUR_WALLET_ADDRESS";
 const account = new Account(provider, accountAddress0, privateKey0);
 
 // Call the buildTransaction method in order to build the transaction
+// slippage: The maximum acceptable slippage of the buyAmount amount. 
+// slippage formula = slippage * 100
+// value 0.005 is %0.5, 0.05 is 5%, 0.01 is %1, 0.001 is %0.1 ...
 const slippage = 0.5;
 const swapCall = await fibrous.buildTransaction(
     inputAmount,
