@@ -63,25 +63,11 @@ import { parseUnits } from "ethers";
 
 const fibrous = new FibrousRouter();
 
+const tokens = await fibrous.supportedTokens();
 const tokenInAddress = tokens["eth"].address;
 const tokenOutAddress = tokens["usdc"].address;
 const tokenInDecimals = tokens["eth"].decimals;
 const inputAmount = BigNumber.from(parseUnits("1", tokenInDecimals));
-
-// Build route options
-const tokens = await fibrous.supportedTokens();
-// Get a route using the getBestRoute method
-const route = await fibrous.getBestRoute(
-            inputAmount, // amount
-            tokenInAddress, // token input
-            tokenOutAddress, // token output
-        );
-if (bestRoute.success === false) {
-    console.error(bestRoute.errorMessage);
-    return;
-}
-
-
 
 // Usege on your website
 
@@ -111,7 +97,7 @@ if (starknet.isConnected) {
     receiverAddress,
   );
 
-  await starknet.account.execute([approveCall,tx]);
+  await starknet.account.execute([approveCall,swapCall]);
 }
 
 
@@ -120,7 +106,9 @@ if (starknet.isConnected) {
 const provider = new Provider();
 const privateKey0 = "YOUR_PRIVATE_KEY";
 const accountAddress0 = "YOUR_WALLET_ADDRESS";
-const account = new Account(provider, accountAddress0, privateKey0);
+// https://www.starknetjs.com/docs/guides/connect_account
+// If this account is based on a Cairo v2 contract (for example OpenZeppelin account 0.7.0 or later), do not forget to add the parameter "1" after the privateKey parameter
+const account = new Account(provider, accountAddress0, privateKey0,"1");
 
 // Call the buildTransaction method in order to build the transaction
 // slippage: The maximum acceptable slippage of the buyAmount amount. 
