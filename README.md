@@ -81,7 +81,7 @@ if (starknet.isConnected) {
   // slippage: The maximum acceptable slippage of the buyAmount amount. 
   // slippage formula = slippage * 100
   // value 0.005 is %0.5, 0.05 is 5%, 0.01 is %1, 0.001 is %0.1 ...
-  const slippage = 0.5;
+  const slippage = 0.01; // %1
   const receiverAddress = starknet.selectedAddress;
 
   const approveCall:Call = await fibrous.buildApprove(
@@ -114,7 +114,7 @@ const account = new Account(provider, accountAddress0, privateKey0,"1");
 // slippage: The maximum acceptable slippage of the buyAmount amount. 
 // slippage formula = slippage * 100
 // value 0.005 is %0.5, 0.05 is 5%, 0.01 is %1, 0.001 is %0.1 ...
-const slippage = 0.5;
+const slippage = 0.01; // %1
 const swapCall = await fibrous.buildTransaction(
     inputAmount,
     tokenInAddress,
