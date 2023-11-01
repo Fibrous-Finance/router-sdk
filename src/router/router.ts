@@ -12,7 +12,7 @@ import { Call } from "starknet";
 export class Router {
     readonly DEFAULT_API_URL = "https://api.fibrous.finance";
     readonly ROUTER_ADDRESS =
-        "0x03201e8057a781dca378564b9d3bbe9b5b7617fac4ad9d9deaa1024cf63f877e";
+        "0x00f6f4CF62E3C010E0aC2451cC7807b5eEc19a40b0FaaCd00CCA3914280FDf5a";
 
     private readonly apiUrl: string;
     private readonly apiKey: string | null;
