@@ -38,7 +38,7 @@
   "dependencies": {
     "@ethersproject/bignumber": "^5.7.0",
     "ethers": "^6.7.1",
-    "fibrous-router-sdk": "^0.3.3a",
+    "fibrous-router-sdk": "^0.3.4",
     "starknet": "^5.14.1"
   },
   "publishConfig": {
