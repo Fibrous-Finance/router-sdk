@@ -3007,13 +3007,14 @@
   dependencies:
     "bser" "2.1.1"
 
-"fibrous-router-sdk@^0.3.2-a":
-  "integrity" "sha512-Cg+GnZuEwCfkyD+PfJSVHrde5kki6MK4AXkWw3jbEsQ/xaZGnPdmQQjcWeogeK1lxAyV5aRZsRA0T2Fn9oAw7Q=="
-  "resolved" "https://registry.npmjs.org/fibrous-router-sdk/-/fibrous-router-sdk-0.3.2-a.tgz"
-  "version" "0.3.2-a"
+"fibrous-router-sdk@^0.3.2-a", "fibrous-router-sdk@^0.3.3a":
+  "integrity" "sha512-5uHmVayqq59hL5bF28U/8LPNSFeiziRKjOi8pzV4tT/41Ef0xqNIQj9cZaAwm0fSBQq8tiyZlefHcHI6N0nF0g=="
+  "resolved" "https://registry.npmjs.org/fibrous-router-sdk/-/fibrous-router-sdk-0.3.3.tgz"
+  "version" "0.3.3"
   dependencies:
     "@ethersproject/bignumber" "^5.7.0"
     "ethers" "^6.7.1"
+    "fibrous-router-sdk" "^0.3.2-a"
     "starknet" "^5.14.1"
 
 "figures@^1.0.1":

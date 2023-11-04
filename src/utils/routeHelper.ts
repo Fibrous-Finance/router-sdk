@@ -1,4 +1,10 @@
-import { RouteParams, RouteSuccess, CairoSwap, Percent ,RouteExecuteParams} from "../types";
+import {
+    RouteParams,
+    RouteSuccess,
+    CairoSwap,
+    Percent,
+    RouteExecuteParams,
+} from "../types";
 import { BigNumberish, uint256 } from "starknet";
 
 /**
@@ -7,7 +13,10 @@ import { BigNumberish, uint256 } from "starknet";
  * @param options: Options for the route
  * @returns Final URL
  */
-export const buildRouteUrl = (url: string, params: RouteParams | RouteExecuteParams): string => {
+export const buildRouteUrl = (
+    url: string,
+    params: RouteParams | RouteExecuteParams,
+): string => {
     const requestParams = Object.keys(params)
         .map((key) => `${key}=${params[key]}`)
         .join("&");
@@ -34,6 +43,7 @@ export const parsePercent = (p: number): string =>
 
 /**
  * Formats the response from the Fibrous API into a flattened array of swaps
+ * @warning Deprecated, use execute endpoint instead
  * @param res Response from the Fibrous API
  * @returns Flattened array of swaps, ready to be passed to the Starknet contract
  */

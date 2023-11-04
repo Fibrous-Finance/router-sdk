@@ -1,6 +1,6 @@
 {
   "name": "fibrous-router-sdk",
-  "version": "0.3.3a",
+  "version": "0.3.4",
   "description": "A Javascript SDK for Fibrous Finance",
   "main": "dist/index.js",
   "module": "dist/index.m.js",
@@ -38,7 +38,7 @@
   "dependencies": {
     "@ethersproject/bignumber": "^5.7.0",
     "ethers": "^6.7.1",
-    "fibrous-router-sdk": "^0.3.2-a",
+    "fibrous-router-sdk": "^0.3.3a",
     "starknet": "^5.14.1"
   },
   "publishConfig": {
