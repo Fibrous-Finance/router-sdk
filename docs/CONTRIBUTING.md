@@ -47,7 +47,7 @@ Please adhere to the following guidelines when submitting code:
 
 ## License
 
-By contributing to this project, you agree that your contributions will be licensed under the [project's license](../LICENCE).
+By contributing to this project, you agree that your contributions will be licensed under the [project's license](../LICENSE).
 
 ## Conclusion
 
