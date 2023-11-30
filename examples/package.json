@@ -1,6 +1,6 @@
 {
   "name": "fibrous-sdk-examples",
-  "version": "0.2.0",
+  "version": "0.3.4",
   "description": "Examples for using Fibrous SDK",
   "main": "index.js",
   "author": "kermo & zetsuboii",
