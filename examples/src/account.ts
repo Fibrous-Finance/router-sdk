@@ -9,8 +9,8 @@ export function account(
         SN_MAIN = "SN_MAIN",
         SN_GOERLI = "SN_GOERLI",
     }
-    const provider = new Provider({
-        network: constants.NetworkName.SN_MAIN
+    const provider = new RpcProvider({
+        nodeUrl: constants.NetworkName.SN_MAIN
     });
     const account0 = new Account(
         provider,
