@@ -1,4 +1,4 @@
-import { Account, CairoVersion, Provider } from "starknet";
+import { Account, CairoVersion, RpcProvider, constants } from "starknet";
 
 export function account(
     privateKey: string,
@@ -8,12 +8,9 @@ export function account(
     enum NetworkName {
         SN_MAIN = "SN_MAIN",
         SN_GOERLI = "SN_GOERLI",
-        SN_GOERLI2 = "SN_GOERLI2",
     }
     const provider = new Provider({
-        sequencer: {
-            network: NetworkName.SN_MAIN,
-        },
+        network: constants.NetworkName.SN_MAIN
     });
     const account0 = new Account(
         provider,
