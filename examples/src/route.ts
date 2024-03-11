@@ -12,11 +12,15 @@ async function main() {
         const tokenOutAddress = tokens["usdc"].address;
         const tokenInDecimals = tokens["eth"].decimals;
         const inputAmount = BigNumber.from(parseUnits("1", tokenInDecimals));
+        const reverse = false;
         // Converting 1 ETH to USDC
         const route = await fibrous.getBestRoute(
             inputAmount,
             tokenInAddress,
             tokenOutAddress,
+            {
+                reverse,
+            },
         );
         console.log("route", route);
     } catch (error) {

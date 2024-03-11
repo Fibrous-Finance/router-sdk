@@ -11,6 +11,7 @@ import { BigNumber } from "@ethersproject/bignumber";
 import { Call } from "starknet";
 export class Router {
     readonly DEFAULT_API_URL = "https://api.fibrous.finance";
+    readonly GRAPH_API_URL = "https://graph.fibrous.finance";
     readonly ROUTER_ADDRESS =
         "0x00f6f4CF62E3C010E0aC2451cC7807b5eEc19a40b0FaaCd00CCA3914280FDf5a";
 
@@ -68,13 +69,13 @@ export class Router {
      * @returns Supported token list
      */
     async supportedTokens(): Promise<Record<string, Token>> {
-        const tokens: Token[] = await fetch(`${this.apiUrl}/tokens`, {
+        const tokens: Token[] = await fetch(`${this.GRAPH_API_URL}/tokens`, {
             headers: buildHeaders(this.apiKey),
         }).then((response) => response.json());
 
         // Create a record of tokens by symbol
         return tokens.reduce(
-            (acc, token) => Object.assign(acc, { [token.symbol]: token }),
+            (acc, token) => Object.assign(acc, { [token.symbol.toLocaleLowerCase()]: token }),
             {},
         );
     }
