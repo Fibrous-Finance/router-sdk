@@ -18,7 +18,7 @@ yarn add fibrous-router-sdk
 # PNPM
 pnpm add fibrous-router-sdk
 ```
-
+ [Checkout full documentation](https://docs.fibrous.finance/)
 ## Usage
 
 Fetching Tokens
