@@ -27,7 +27,7 @@ Fetching Tokens
 import { Router as FibrousRouter } from "fibrous-router-sdk";
 
 const router = new FibrousRouter();
-const suportedTokens = await router.supportedTokens(); // returns array as token type (src/types/token.ts)
+const tokens = await router.supportedTokens(); // returns array as token type (src/types/token.ts)
 ```
 
 Fetching route
@@ -108,7 +108,8 @@ const privateKey0 = "YOUR_PRIVATE_KEY";
 const accountAddress0 = "YOUR_WALLET_ADDRESS";
 // https://www.starknetjs.com/docs/guides/connect_account
 // If this account is based on a Cairo v2 contract (for example OpenZeppelin account 0.7.0 or later), do not forget to add the parameter "1" after the privateKey parameter
-const account = new Account(provider, accountAddress0, privateKey0,"1");
+    const RPC_URL = "RPC_URL";
+    const account0 = account(privateKey, public_key, "1", RPC_URL);
 
 // Call the buildTransaction method in order to build the transaction
 // slippage: The maximum acceptable slippage of the buyAmount amount. 
