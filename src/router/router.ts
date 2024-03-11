@@ -75,7 +75,10 @@ export class Router {
 
         // Create a record of tokens by symbol
         return tokens.reduce(
-            (acc, token) => Object.assign(acc, { [token.symbol.toLocaleLowerCase()]: token }),
+            (acc, token) =>
+                Object.assign(acc, {
+                    [token.symbol.toLocaleLowerCase()]: token,
+                }),
             {},
         );
     }

@@ -6,7 +6,6 @@ export function account(
     isCairo1: string,
     rpc_url: string,
 ) {
-
     const provider = new RpcProvider({
         nodeUrl: rpc_url,
     });
