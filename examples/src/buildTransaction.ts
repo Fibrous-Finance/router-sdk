@@ -42,8 +42,8 @@ async function main() {
         inputAmount,
         tokenInAddress,
     );
-    const tx = await account0.execute([approveCall, swapCall]);
-    console.log(tx);
+    const resp = await account0.execute([approveCall, swapCall]);
+    console.log(`https://starkscan.co/tx/${resp.transaction_hash}`);
 }
 
 main();

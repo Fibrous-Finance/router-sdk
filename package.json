@@ -11,6 +11,10 @@
   ],
   "scripts": {
     "test": "jest",
+    "buildTransaction":"npx ts-node examples/src/buildTransaction.ts",
+    "router": "npx ts-node examples/src/router.ts",
+    "tokens": "npx ts-node examples/src/tokens.ts",
+    "protocols": "npx ts-node examples/src/protocols.ts",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\" \"examples/**/*.ts\"",
     "build": "rimraf dist && microbundle --tsconfig tsconfig.json"
   },
