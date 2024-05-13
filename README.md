@@ -70,7 +70,7 @@ const tokenOutAddress = tokens["usdc"].address;
 const tokenInDecimals = tokens["eth"].decimals;
 const inputAmount = BigNumber.from(parseUnits("1", tokenInDecimals));
 
-// Usege on your website
+// Usage on your website
 
 const starknet = await connect({ showList: false })
 
