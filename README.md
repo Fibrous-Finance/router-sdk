@@ -130,7 +130,7 @@ const approveCall:Call = await fibrous.buildApprove(
       tokenInAddress,
   );
 
-await account.execute([approveToken, swapCall])
+await account.execute([approveCall, swapCall])
 
 ```
 
