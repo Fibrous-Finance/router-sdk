@@ -9,20 +9,18 @@ async function main() {
     // Create a new router instance
     const fibrous = new FibrousRouter();
 
-    // Build route options
+    // Get the supported tokens for the Starknet chain
     const tokens = await fibrous.supportedTokens("starknet");
 
-    const tokenInAddress = tokens["usdt"].address;
-    const tokenOutAddress = tokens["usdc"].address;
-    const tokenInDecimals = tokens["usdt"].decimals;
-    const inputAmount = BigNumber.from(parseUnits("5", tokenInDecimals));
+    const tokenInAddress = tokens["usdc"].address;
+    const tokenOutAddress = tokens["usdt"].address;
+    const tokenInDecimals = tokens["usdc"].decimals;
+    const inputAmount = BigNumber.from(4n * 10n ** BigInt(tokenInDecimals));
 
     // Call the buildTransaction method in order to build the transaction
     // slippage: The maximum acceptable slippage of the buyAmount amount.
-    // slippage formula = slippage * 100
-    // value 0.005 is %0.5, 0.05 is 5%, 0.01 is %1, 0.001 is %0.1 ...
-    const slippage = 0.005;
-    const destination = "account_address";
+    const slippage = 1; // 1%
+    const destination = "destination"; // The address to receive the tokens after the swap is completed (required)
     const swapCall = await fibrous.buildTransaction(
         inputAmount,
         tokenInAddress,
@@ -36,7 +34,7 @@ async function main() {
 
     // https://www.starknetjs.com/docs/guides/connect_account
     // If this account is based on a Cairo v2 contract (for example OpenZeppelin account 0.7.0 or later), do not forget to add the parameter "1" after the privateKey parameter
-    const RPC_URL = "RPC_URL";
+    const RPC_URL = "rpc_url";
     const account0 = account(privateKey, public_key, "1", RPC_URL);
     const approveCall: Call = await fibrous.buildApproveStarknet(
         inputAmount,
