@@ -40,6 +40,7 @@ export type RouteSuccess = {
     outputToken: Token;
     outputAmount: string;
     estimatedGasUsed: string;
+    estimatedGasUsedInUsd: string;
     route: Route[];
     time: number;
 };
@@ -55,6 +56,7 @@ export type Swap = {
     protocol: ProtocolId;
     poolId: string;
     poolAddress: string;
+    poolName: string;
     fromTokenAddress: string;
     toTokenAddress: string;
     percent: Percent;
