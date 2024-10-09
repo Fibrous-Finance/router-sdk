@@ -1,13 +1,13 @@
 import { Router as FibrousRouter } from "fibrous-router-sdk";
 
-// Example of getting a list of tokens
+// Example of getting an object of supported protocols
 async function main() {
     // Create a new router instance
     const router = new FibrousRouter();
 
     try {
-        const tokens = await router.supportedTokens();
-        console.log(tokens);
+        const protocols = await router.supportedProtocols("starknet");
+        console.log(protocols);
     } catch (error) {
         console.error(error);
     }

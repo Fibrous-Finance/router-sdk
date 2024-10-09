@@ -10,7 +10,7 @@ async function main() {
     const fibrous = new FibrousRouter();
 
     // Build route options
-    const tokens = await fibrous.supportedTokens();
+    const tokens = await fibrous.supportedTokens("starknet");
 
     const tokenInAddress = tokens["usdt"].address;
     const tokenOutAddress = tokens["usdc"].address;
@@ -29,8 +29,8 @@ async function main() {
         tokenOutAddress,
         slippage,
         destination,
+        "starknet",
     );
-    console.log(swapCall);
     const public_key = "public_key";
     const privateKey = "private_key";
 
@@ -38,7 +38,7 @@ async function main() {
     // If this account is based on a Cairo v2 contract (for example OpenZeppelin account 0.7.0 or later), do not forget to add the parameter "1" after the privateKey parameter
     const RPC_URL = "RPC_URL";
     const account0 = account(privateKey, public_key, "1", RPC_URL);
-    const approveCall: Call = await fibrous.buildApprove(
+    const approveCall: Call = await fibrous.buildApproveStarknet(
         inputAmount,
         tokenInAddress,
     );

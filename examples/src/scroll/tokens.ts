@@ -1,16 +1,18 @@
 import { Router as FibrousRouter } from "fibrous-router-sdk";
 
-// Example of getting an object of supported protocols
+// Example of getting a list of tokens
 async function main() {
     // Create a new router instance
     const router = new FibrousRouter();
 
     try {
-        const protocols = await router.supportedProtocols();
-        console.log(protocols);
+        const tokens = await router.supportedTokens("scroll");
+        console.log(tokens);
     } catch (error) {
         console.error(error);
     }
 }
 
-main();
+main().catch((e) => {
+    console.error("Error: ", e);
+});

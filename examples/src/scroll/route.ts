@@ -6,18 +6,19 @@ async function main() {
     const fibrous = new FibrousRouter();
 
     // Build route options
-    const tokens = await fibrous.supportedTokens();
+    const tokens = await fibrous.supportedTokens("scroll");
     try {
-        const tokenInAddress = tokens["eth"].address;
+        const tokenInAddress = tokens["usdt"].address;
         const tokenOutAddress = tokens["usdc"].address;
-        const tokenInDecimals = tokens["eth"].decimals;
-        const inputAmount = BigNumber.from(parseUnits("1", tokenInDecimals));
+        const tokenInDecimals = Number(tokens["usdt"].decimals);
+        const inputAmount = BigNumber.from(parseUnits("5", tokenInDecimals));
         const reverse = false;
-        // Converting 1 ETH to USDC
+        // Converting 5 USDT to USDC
         const route = await fibrous.getBestRoute(
             inputAmount,
             tokenInAddress,
             tokenOutAddress,
+            "scroll",
             {
                 reverse,
             },
@@ -28,4 +29,6 @@ async function main() {
     }
 }
 
-main();
+main().catch((e) => {
+    console.error("Error: ", e);
+});
