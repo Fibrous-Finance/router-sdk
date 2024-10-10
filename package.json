@@ -1,6 +1,6 @@
 {
   "name": "fibrous-router-sdk",
-  "version": "0.3.5",
+  "version": "0.4.0",
   "description": "A Javascript SDK for Fibrous Finance",
   "main": "dist/index.js",
   "module": "dist/index.m.js",
@@ -11,15 +11,12 @@
   ],
   "scripts": {
     "test": "jest",
-    "buildTransaction": "npx ts-node examples/src/buildTransaction.ts",
-    "router": "npx ts-node examples/src/router.ts",
-    "tokens": "npx ts-node examples/src/tokens.ts",
-    "protocols": "npx ts-node examples/src/protocols.ts",
+    "execute": "npx ts-node",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\" \"examples/**/*.ts\"",
     "build": "rimraf dist && microbundle --tsconfig tsconfig.json"
   },
   "keywords": [],
-  "author": "zetsuboii hmzkrb@gmail.com",
+  "author": "kermo kermo@fibrous.com",
   "license": "MIT",
   "devDependencies": {
     "@babel/core": "^7.22.9",
