@@ -56,7 +56,7 @@ const fibrous = new FibrousRouter();
 
 const chainName = "starknet"
 
-const tokens = await fibrous.supportedTokens();
+const tokens = await fibrous.supportedTokens(chainName);
 const tokenInAddress = tokens["eth"].address;
 const tokenOutAddress = tokens["usdc"].address;
 const tokenInDecimals = tokens["eth"].decimals;
@@ -137,8 +137,8 @@ const fibrous = new FibrousRouter();
 
 const chainName = "starknet"
 
-const tokens = await fibrous.supportedTokens();
- const tokenInAddress_1 = tokens["eth"].address;
+const tokens = await fibrous.supportedTokens(chainName);
+const tokenInAddress_1 = tokens["eth"].address;
 const tokenInAddress_2 = tokens["strk"].address;
 const tokenInAddress_3 = tokens["usdc"].address;
 
@@ -176,7 +176,7 @@ const swapCalls = await fibrous.buildBatchTransaction(
     tokenOutAddresses,
     slippage,
     destination,
-    "starknet",
+    chainName,
 );
 
    const approveCalls: Call[] = [];
@@ -210,7 +210,7 @@ const swapCalls = await fibrous.buildBatchTransaction(
     tokenOutAddresses,
     slippage,
     destination,
-    "starknet",
+    chainName,
 );
 
 const approveCalls: Call[] = [];

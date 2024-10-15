@@ -65,10 +65,10 @@ const fibrous = new FibrousRouter();
 
 // Create a new contract instance
 const account0 = account(privateKey, RPC_URL);
-const contractwwallet = await fibrous.getContractWAccount(account0, "scroll");
+const contractwwallet = await fibrous.getContractWAccount(account0, chainName);
 
 // Build route options
-const tokens = await fibrous.supportedTokens("scroll");
+const tokens = await fibrous.supportedTokens(chainName);
 
 const tokenInAddress = tokens["usdt"].address;
 const tokenOutAddress = tokens["usdc"].address;
