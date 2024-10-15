@@ -6,6 +6,7 @@ import {
     ProtocolId,
     RouteOverrides,
     RouteExecuteParams,
+    RouteExecuteBatchParams,
 } from "../types";
 import { fibrousRouterABI, erc20ABI } from "../abis";
 import { BigNumber } from "@ethersproject/bignumber";
@@ -220,6 +221,64 @@ export class Router {
             };
         } else if (chainName == "scroll") {
             return calldata;
+        } else {
+            throw new Error("Invalid chain ID");
+        }
+    }
+
+    /**
+     * Builds a Batch transaction out of the route response (only on Starknet for now)
+     * @param route: Route response
+     * @param slippage: Slippage percentage (1 = 1%)
+     * @param receiverAddress: Address to receive the tokens
+     */
+    async buildBatchTransaction(
+        inputAmounts: BigNumber[],
+        tokenInAddresses: string[],
+        tokenOutAddresses: string[],
+        slippage: number,
+        destination: string,
+        chainName: string,
+        options?: Partial<RouteOverrides>,
+    ): Promise<Call | any> {
+        const amounts = inputAmounts.map((amount) => amount.toHexString());
+        const routeParams: RouteExecuteBatchParams = {
+            amounts,
+            tokenInAddresses,
+            tokenOutAddresses,
+            slippage,
+            destination,
+        };
+
+        // Add optional parameters
+        for (const [key, value] of Object.entries(options ?? {})) {
+            if (key == "excludeProtocols") {
+                routeParams.excludeProtocols = (value as ProtocolId[]).join(
+                    ",",
+                );
+                continue;
+            }
+            routeParams[key as any] = value;
+        }
+
+        const routeUrl = buildRouteUrl(
+            `${this.apiUrl}/${chainName}/executeBatch`,
+            routeParams,
+        );
+        const calldata = await fetch(routeUrl, {
+            headers: buildHeaders(this.apiKey),
+        }).then((response) => response.json());
+
+        if (chainName == "starknet") {
+            const swapCalls = calldata.map((call: any) => {
+                return {
+                    contractAddress: this.STARKNET_ROUTER_ADDRESS,
+                    entrypoint: "swap",
+                    calldata: call,
+                };
+            }
+            );
+            return swapCalls;
         } else {
             throw new Error("Invalid chain ID");
         }

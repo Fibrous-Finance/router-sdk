@@ -4,6 +4,7 @@ import {
     CairoSwap,
     Percent,
     RouteExecuteParams,
+    RouteExecuteBatchParams,
 } from "../types";
 import { BigNumberish, uint256 } from "starknet";
 
@@ -15,7 +16,7 @@ import { BigNumberish, uint256 } from "starknet";
  */
 export const buildRouteUrl = (
     url: string,
-    params: RouteParams | RouteExecuteParams,
+    params: RouteParams | RouteExecuteParams | RouteExecuteBatchParams,
 ): string => {
     const requestParams = Object.keys(params)
         .map((key) => `${key}=${params[key]}`)

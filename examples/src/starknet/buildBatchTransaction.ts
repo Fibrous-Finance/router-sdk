@@ -1,6 +1,6 @@
 import { BigNumber } from "@ethersproject/bignumber";
 // import { Router as FibrousRouter } from "fibrous-router-sdk";
-import { Router as FibrousRouter } from '../../../src';
+import { Router as FibrousRouter } from "../../../src";
 import { Account, CairoVersion, Call, RpcProvider } from "starknet";
 
 import { account } from "./account";
@@ -12,19 +12,32 @@ async function main() {
     // Get the supported tokens for the Starknet chain
     const tokens = await fibrous.supportedTokens("starknet");
 
-    const tokenInAddress = tokens["eth"].address;
+    const tokenInAddress_1 = tokens["eth"].address;
+    const tokenInAddress_2 = tokens["strk"].address;
+    const tokenInAddress_3 = tokens["usdc"].address;
+
     const tokenOutAddress = tokens["usdt"].address;
-    const tokenInDecimals = tokens["eth"].decimals;
-    const inputAmount = BigNumber.from(1n * 10n ** BigInt(tokenInDecimals -3)); // 0.001 ETH
+    
+    const tokenInDecimals_1 = tokens["eth"].decimals;
+    const tokenInDecimals_2 = tokens["strk"].decimals;
+    const tokenInDecimals_3 = tokens["usdc"].decimals;
+
+    const inputAmounts = [
+        BigNumber.from(1n * 10n ** BigInt(tokenInDecimals_1 - 3)), // 0.001 ETH
+        BigNumber.from(10n * 10n ** BigInt(tokenInDecimals_2)), // 0.001 STRK
+        BigNumber.from(5n * 10n ** BigInt(tokenInDecimals_3)), // 5 USDC
+    ]; // 0.001 ETH
 
     // Call the buildTransaction method in order to build the transaction
     // slippage: The maximum acceptable slippage of the buyAmount amount.
     const slippage = 1; // 1%
     const destination = "destination_address"; // The address to receive the tokens after the swap is completed (required)
-    const swapCall = await fibrous.buildTransaction(
-        inputAmount,
-        tokenInAddress,
-        tokenOutAddress,
+    const tokenInAddresses = [tokenInAddress_1, tokenInAddress_2, tokenInAddress_3];
+    const tokenOutAddresses = [tokenOutAddress];
+    const swapCalls = await fibrous.buildBatchTransaction(
+        inputAmounts,
+        tokenInAddresses,
+        tokenOutAddresses,
         slippage,
         destination,
         "starknet",
@@ -37,11 +50,15 @@ async function main() {
     const RPC_URL = "rpc_url";
 
     const account0 = account(privateKey, public_key, "1", RPC_URL);
-    const approveCall: Call = await fibrous.buildApproveStarknet(
-        inputAmount,
-        tokenInAddress,
-    );
-    const resp = await account0.execute([approveCall, swapCall]);
+    const approveCalls: Call[] = [];
+    for(let i = 0; i < inputAmounts.length; i++) {
+        const approveCall: Call = await fibrous.buildApproveStarknet(
+            inputAmounts[i],
+            tokenInAddresses[i],
+        );
+        approveCalls.push(approveCall);
+    }
+    const resp = await account0.execute([...approveCalls, ...swapCalls]);
     console.log(`https://starkscan.co/tx/${resp.transaction_hash}`);
 }
 
