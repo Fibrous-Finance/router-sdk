@@ -226,8 +226,6 @@ const resp = await account0.execute([...approveCalls, ...swapCalls]);
 console.log(`https://voyager.online/tx/${resp.transaction_hash}`);
 ```
 
-Check out the [examples](./examples) folder for more detailed examples.
-
 ## Contributing
 
 We welcome contributions from the community. Please review our [contributing guidelines](./docs/CONTRIBUTING.md) to get started.
