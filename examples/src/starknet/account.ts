@@ -9,11 +9,6 @@ export function account(
     const provider = new RpcProvider({
         nodeUrl: rpc_url,
     });
-    const account0 = new Account(
-        provider,
-        public_key,
-        privateKey,
-        isCairo1 as CairoVersion,
-    );
+    const account0 = new Account(provider, public_key, privateKey);
     return account0;
 }

@@ -1,14 +1,15 @@
 import { BigNumber } from "@ethersproject/bignumber";
 import { Router as FibrousRouter } from "fibrous-router-sdk";
+
 import { parseUnits } from "ethers";
 import { account } from "./account";
 
 // RPC URL for the Scroll network, you can change this to the RPC URL of your choice
 const RPC_URL = "https://rpc.scroll.io";
-// Destination address for the swap
+// Destination address for the swap (required)
 const destination = "<DESTINATION_ADDRESS>";
 // Private key of the account that will be used to sign the transaction
-const privateKey = "<PRIVATE_KEY>";
+const privateKey = "<PRIVATE_KEY";
 
 async function main() {
     // Create a new router instance
@@ -47,6 +48,7 @@ async function main() {
         account0,
         "scroll",
     );
+
     if (approveResponse === true) {
         try {
             const tx = await contractwwallet.swap(

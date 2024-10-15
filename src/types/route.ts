@@ -28,6 +28,16 @@ export type RouteExecuteParams = {
     Omit<RouteOverrides, "excludeProtocols"> & { excludeProtocols: string }
 >;
 
+export type RouteExecuteBatchParams = {
+    amounts: string[];
+    tokenInAddresses: string[];
+    tokenOutAddresses: string[];
+    slippage: number;
+    destination: string;
+} & Partial<
+    Omit<RouteOverrides, "excludeProtocols"> & { excludeProtocols: string }
+>;
+
 export type RouteFailure = {
     success: false;
     errorMessage: string;
@@ -40,6 +50,7 @@ export type RouteSuccess = {
     outputToken: Token;
     outputAmount: string;
     estimatedGasUsed: string;
+    estimatedGasUsedInUsd: string;
     route: Route[];
     time: number;
 };
@@ -55,6 +66,7 @@ export type Swap = {
     protocol: ProtocolId;
     poolId: string;
     poolAddress: string;
+    poolName: string;
     fromTokenAddress: string;
     toTokenAddress: string;
     percent: Percent;
