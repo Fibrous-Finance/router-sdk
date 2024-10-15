@@ -1,6 +1,5 @@
 import { BigNumber } from "@ethersproject/bignumber";
-// import { Router as FibrousRouter } from "fibrous-router-sdk";
-import { Router as FibrousRouter } from "../../../src";
+import { Router as FibrousRouter } from "fibrous-router-sdk";
 import { Account, CairoVersion, Call, RpcProvider } from "starknet";
 
 import { account } from "./account";
@@ -17,7 +16,7 @@ async function main() {
     const tokenInAddress_3 = tokens["usdc"].address;
 
     const tokenOutAddress = tokens["usdt"].address;
-    
+
     const tokenInDecimals_1 = tokens["eth"].decimals;
     const tokenInDecimals_2 = tokens["strk"].decimals;
     const tokenInDecimals_3 = tokens["usdc"].decimals;
@@ -32,7 +31,11 @@ async function main() {
     // slippage: The maximum acceptable slippage of the buyAmount amount.
     const slippage = 1; // 1%
     const destination = "destination_address"; // The address to receive the tokens after the swap is completed (required)
-    const tokenInAddresses = [tokenInAddress_1, tokenInAddress_2, tokenInAddress_3];
+    const tokenInAddresses = [
+        tokenInAddress_1,
+        tokenInAddress_2,
+        tokenInAddress_3,
+    ];
     const tokenOutAddresses = [tokenOutAddress];
     const swapCalls = await fibrous.buildBatchTransaction(
         inputAmounts,
@@ -51,7 +54,7 @@ async function main() {
 
     const account0 = account(privateKey, public_key, "1", RPC_URL);
     const approveCalls: Call[] = [];
-    for(let i = 0; i < inputAmounts.length; i++) {
+    for (let i = 0; i < inputAmounts.length; i++) {
         const approveCall: Call = await fibrous.buildApproveStarknet(
             inputAmounts[i],
             tokenInAddresses[i],

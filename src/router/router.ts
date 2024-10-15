@@ -276,8 +276,7 @@ export class Router {
                     entrypoint: "swap",
                     calldata: call,
                 };
-            }
-            );
+            });
             return swapCalls;
         } else {
             throw new Error("Invalid chain ID");

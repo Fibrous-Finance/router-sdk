@@ -1,6 +1,5 @@
 import { BigNumber } from "@ethersproject/bignumber";
-// import { Router as FibrousRouter } from "fibrous-router-sdk";
-import { Router as FibrousRouter } from '../../../src';
+import { Router as FibrousRouter } from "fibrous-router-sdk";
 import { Account, CairoVersion, Call, RpcProvider } from "starknet";
 
 import { account } from "./account";
@@ -15,7 +14,7 @@ async function main() {
     const tokenInAddress = tokens["eth"].address;
     const tokenOutAddress = tokens["usdt"].address;
     const tokenInDecimals = tokens["eth"].decimals;
-    const inputAmount = BigNumber.from(1n * 10n ** BigInt(tokenInDecimals -3)); // 0.001 ETH
+    const inputAmount = BigNumber.from(1n * 10n ** BigInt(tokenInDecimals - 3)); // 0.001 ETH
 
     // Call the buildTransaction method in order to build the transaction
     // slippage: The maximum acceptable slippage of the buyAmount amount.
