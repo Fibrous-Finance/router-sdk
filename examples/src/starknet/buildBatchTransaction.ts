@@ -45,14 +45,14 @@ async function main() {
         destination,
         "starknet",
     );
-    const public_key = "public_key";
+    const publicKey = "public_key";
     const privateKey = "private_key";
 
     // https://www.starknetjs.com/docs/guides/connect_account
     // If this account is based on a Cairo v2 contract (for example OpenZeppelin account 0.7.0 or later), do not forget to add the parameter "1" after the privateKey parameter
-    const RPC_URL = "rpc_url";
+    const rpcUrl = "rpc_url";
 
-    const account0 = account(privateKey, public_key, "1", RPC_URL);
+    const account0 = account(privateKey, publicKey, "1", rpcUrl);
     const approveCalls: Call[] = [];
     for (let i = 0; i < inputAmounts.length; i++) {
         const approveCall: Call = await fibrous.buildApproveStarknet(
