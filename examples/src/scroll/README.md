@@ -63,7 +63,7 @@ const chainName = "scroll";
 const fibrous = new FibrousRouter();
 
 // Create a new contract instance
-const account0 = account(privateKey, RPC_URL);
+const account0 = account(privateKey, rpcUrl);
 const contractWallet = await fibrous.getContractWAccount(account0, chainName);
 
 // Build route options
