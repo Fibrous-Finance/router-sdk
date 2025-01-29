@@ -14,7 +14,7 @@ Fetching Tokens
 
 ```javascript
 import { Router as FibrousRouter } from "fibrous-router-sdk";
-const chainName = "scroll"; 
+const chainName = "scroll";
 const router = new FibrousRouter();
 const tokens = await router.supportedTokens(chainName); // returns array as token type (src/types/token.ts)
 ```
@@ -27,7 +27,7 @@ import { BigNumber } from "@ethersproject/bignumber";
 import { parseUnits } from "ethers";
 
 const router = new FibrousRouter();
-const chainName = "scroll"; 
+const chainName = "scroll";
 
 const tokenInAddress = tokens["eth"].address;
 const tokenOutAddress = tokens["usdc"].address;
@@ -41,7 +41,6 @@ const route = await fibrous.getBestRoute(
     chainName,
 );
 // returns route type (src/types/route.ts)
-
 ```
 
 Build transaction on Scroll
@@ -53,7 +52,7 @@ import { parseUnits } from "ethers";
 import { account } from "./account";
 
 // RPC URL for the Scroll network, you can change this to the RPC URL of your choice
-const RPC_URL = "https://rpc.scroll.io";
+const rpcUrl = "https://rpc.scroll.io";
 // Destination address for the swap
 const destination = "<DESTINATION_ADDRESS>";
 // Private key of the account that will be used to sign the transaction
@@ -64,8 +63,8 @@ const chainName = "scroll";
 const fibrous = new FibrousRouter();
 
 // Create a new contract instance
-const account0 = account(privateKey, RPC_URL);
-const contractwwallet = await fibrous.getContractWAccount(account0, chainName);
+const account0 = account(privateKey, rpcUrl);
+const contractWallet = await fibrous.getContractWAccount(account0, chainName);
 
 // Build route options
 const tokens = await fibrous.supportedTokens(chainName);
@@ -95,7 +94,7 @@ const approveResponse = await fibrous.buildApproveEVM(
 );
 if (approveResponse === true) {
     try {
-        const tx = await contractwwallet.swap(
+        const tx = await contractWallet.swap(
             swapCall.route,
             swapCall.swap_parameters,
         );
