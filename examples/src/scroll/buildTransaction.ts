@@ -24,7 +24,10 @@ async function main() {
 
     // Build route options
     const tokens = await fibrous.supportedTokens("scroll");
-
+    /**
+     * recommended that use the token address directly
+     * because there may be more than one token with the same symbol.
+     */
     const tokenInAddress = tokens["usdt"].address;
     const tokenOutAddress = tokens["usdc"].address;
     const tokenInDecimals = Number(tokens["usdt"].decimals);

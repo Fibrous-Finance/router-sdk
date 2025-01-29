@@ -10,7 +10,10 @@ async function main() {
 
     // Get the supported tokens for the Starknet chain
     const tokens = await fibrous.supportedTokens("starknet");
-
+    /**
+     * recommended that use the token address directly 
+     * because there may be more than one token with the same symbol.
+     */
     const tokenInAddress_1 = tokens["eth"].address;
     const tokenInAddress_2 = tokens["strk"].address;
     const tokenInAddress_3 = tokens["usdc"].address;

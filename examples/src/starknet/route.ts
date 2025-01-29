@@ -8,6 +8,10 @@ async function main() {
     // Build route options
     const tokens = await fibrous.supportedTokens(chainName);
     try {
+        /**
+         * recommended that use the token address directly 
+         * because there may be more than one token with the same symbol.
+         */
         const tokenInAddress = tokens["eth"].address;
         const tokenOutAddress = tokens["usdc"].address;
         const tokenInDecimals = tokens["eth"].decimals;
