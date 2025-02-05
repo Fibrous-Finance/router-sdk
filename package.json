@@ -1,6 +1,6 @@
 {
   "name": "fibrous-router-sdk",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "A Javascript SDK for Fibrous Finance",
   "main": "dist/index.js",
   "module": "dist/index.m.js",
