@@ -1,4 +1,9 @@
-import { approveToERC20, buildHeaders, buildRouteUrl } from "../utils";
+import {
+    approveToERC20,
+    buildHeaders,
+    buildRouteUrl,
+    buildRouteUrlBatch,
+} from "../utils";
 import {
     RouteParams,
     RouteResponse,
@@ -7,6 +12,7 @@ import {
     RouteOverrides,
     RouteExecuteParams,
     RouteExecuteBatchParams,
+    RouteParamsBatch,
 } from "../types";
 import { fibrousRouterABI, erc20ABI } from "../abis";
 import { BigNumber } from "@ethersproject/bignumber";
@@ -75,11 +81,45 @@ export class Router {
         }).then((response) => response.json());
     }
 
+    async getBestRouteBatch(
+        amounts: BigNumber[],
+        tokenInAddresses: string[],
+        tokenOutAddresses: string[],
+        chainName: string,
+        options?: Partial<RouteOverrides>,
+    ): Promise<RouteResponse[]> {
+        const routeParams: RouteParamsBatch = {
+            amounts,
+            tokenInAddresses,
+            tokenOutAddresses,
+        };
+
+        for (const [key, value] of Object.entries(options ?? {})) {
+            if (key == "excludeProtocols") {
+                routeParams.excludeProtocols = (value as ProtocolId[]).join(
+                    ",",
+                );
+            }
+            routeParams[key as any] = value;
+        }
+
+        const routeUrl = buildRouteUrlBatch(
+            `${this.apiUrl}/${chainName}/routeBatch`,
+            routeParams,
+        );
+
+        const response = await fetch(routeUrl, {
+            headers: buildHeaders(this.apiKey),
+        }).then((response) => response.json());
+
+        return response;
+    }
+
     /**
      * @param chainName Chain ID to get the supported tokens for
      * @returns Supported token list
      */
-    async supportedTokens(chainName: string): Promise<Record<string, Token>> {
+    async supportedTokens(chainName: string): Promise<Map<string, Token>> {
         const tokens: Token[] = await fetch(
             `${this.GRAPH_API_URL}/${chainName}/tokens`,
             {
@@ -88,13 +128,15 @@ export class Router {
         ).then((response) => response.json());
 
         // Create a record of tokens by symbol
-        return tokens.reduce(
-            (acc, token) =>
-                Object.assign(acc, {
-                    [token.symbol.toLocaleLowerCase()]: token,
-                }),
-            {},
-        );
+        const tokensMap = new Map<string, Token>();
+        tokens.forEach((token) => {
+            const symbol = token.symbol.toLocaleLowerCase();
+            // Only add token if symbol doesn't already exist in map
+            if (!tokensMap.has(symbol)) {
+                tokensMap.set(symbol, token);
+            }
+        });
+        return tokensMap;
     }
 
     /**
