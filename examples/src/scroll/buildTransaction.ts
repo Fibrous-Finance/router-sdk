@@ -28,9 +28,12 @@ async function main() {
      * recommended that use the token address directly
      * because there may be more than one token with the same symbol.
      */
-    const tokenInAddress = tokens["usdt"].address;
-    const tokenOutAddress = tokens["usdc"].address;
-    const tokenInDecimals = Number(tokens["usdt"].decimals);
+    const tokenInAddress = tokens.get("usdt")?.address;
+    const tokenOutAddress = tokens.get("usdc")?.address;
+    const tokenInDecimals = Number(tokens.get("usdt")?.decimals);
+    if (!tokenInAddress || !tokenOutAddress || !tokenInDecimals) {
+        throw new Error("Token not found");
+    }
     const inputAmount = BigNumber.from(parseUnits("5", tokenInDecimals));
 
     // Call the buildTransaction method in order to build the transaction

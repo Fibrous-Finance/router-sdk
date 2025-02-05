@@ -14,9 +14,12 @@ async function main() {
      * recommended that use the token address directly 
      * because there may be more than one token with the same symbol.
      */
-    const tokenInAddress = tokens["eth"].address;
-    const tokenOutAddress = tokens["usdt"].address;
-    const tokenInDecimals = tokens["eth"].decimals;
+    const tokenInAddress = tokens.get("eth")?.address;
+    const tokenOutAddress = tokens.get("usdt")?.address;
+    const tokenInDecimals = tokens.get("eth")?.decimals;
+    if (!tokenInAddress || !tokenOutAddress || !tokenInDecimals) {
+        throw new Error("Token not found");
+    }
     const inputAmount = BigNumber.from(1n * 10n ** BigInt(tokenInDecimals - 3)); // 0.001 ETH
 
     // Call the buildTransaction method in order to build the transaction

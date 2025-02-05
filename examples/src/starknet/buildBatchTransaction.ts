@@ -11,19 +11,29 @@ async function main() {
     // Get the supported tokens for the Starknet chain
     const tokens = await fibrous.supportedTokens("starknet");
     /**
-     * recommended that use the token address directly 
+     * recommended that use the token address directly
      * because there may be more than one token with the same symbol.
      */
-    const tokenInAddress_1 = tokens["eth"].address;
-    const tokenInAddress_2 = tokens["strk"].address;
-    const tokenInAddress_3 = tokens["usdc"].address;
+    const tokenInAddress_1 = tokens.get("eth")?.address;
+    const tokenInAddress_2 = tokens.get("strk")?.address;
+    const tokenInAddress_3 = tokens.get("usdc")?.address;
 
-    const tokenOutAddress = tokens["usdt"].address;
+    const tokenOutAddress = tokens.get("usdt")?.address;
 
-    const tokenInDecimals_1 = tokens["eth"].decimals;
-    const tokenInDecimals_2 = tokens["strk"].decimals;
-    const tokenInDecimals_3 = tokens["usdc"].decimals;
-
+    const tokenInDecimals_1 = tokens.get("eth")?.decimals;
+    const tokenInDecimals_2 = tokens.get("strk")?.decimals;
+    const tokenInDecimals_3 = tokens.get("usdc")?.decimals;
+    if (
+        !tokenInAddress_1 ||
+        !tokenInAddress_2 ||
+        !tokenInAddress_3 ||
+        !tokenOutAddress ||
+        !tokenInDecimals_1 ||
+        !tokenInDecimals_2 ||
+        !tokenInDecimals_3
+    ) {
+        throw new Error("Token not found");
+    }
     const inputAmounts = [
         BigNumber.from(1n * 10n ** BigInt(tokenInDecimals_1 - 3)), // 0.001 ETH
         BigNumber.from(10n * 10n ** BigInt(tokenInDecimals_2)), // 0.001 STRK
