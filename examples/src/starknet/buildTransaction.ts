@@ -1,6 +1,6 @@
 import { BigNumber } from "@ethersproject/bignumber";
 import { Router as FibrousRouter } from "fibrous-router-sdk";
-import { Account, CairoVersion, Call, RpcProvider } from "starknet";
+import { Call } from "starknet";
 
 import { account } from "./account";
 

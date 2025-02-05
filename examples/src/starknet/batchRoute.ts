@@ -1,5 +1,5 @@
 import { BigNumber } from "@ethersproject/bignumber";
-import { Router as FibrousRouter } from "../../../src/router/router";
+import { Router as FibrousRouter } from "fibrous-router-sdk";
 
 async function main() {
     // Create a new router instance
@@ -49,7 +49,6 @@ async function main() {
     );
 
     console.log(swapCalls);
-
 }
 
 main();
