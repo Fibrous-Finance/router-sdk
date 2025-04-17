@@ -100,8 +100,8 @@ const privateKey0 = "YOUR_PRIVATE_KEY";
 const accountAddress0 = "YOUR_WALLET_ADDRESS";
 // https://www.starknetjs.com/docs/guides/connect_account
 // If this account is based on a Cairo v2 contract (for example OpenZeppelin account 0.7.0 or later), do not forget to add the parameter "1" after the privateKey parameter
-const rpcUrl = "RPC_URL";
-const account0 = account(privateKey, publicKey, "1", rpcUrl);
+const RPC_URL = "RPC_URL";
+const account0 = account(privateKey, public_key, "1", RPC_URL);
 
 // Call the buildTransaction method in order to build the transaction
 // slippage: The maximum acceptable slippage of the buyAmount amount.
@@ -198,8 +198,8 @@ const privateKey0 = "YOUR_PRIVATE_KEY";
 const accountAddress0 = "YOUR_WALLET_ADDRESS";
 // https://www.starknetjs.com/docs/guides/connect_account
 // If this account is based on a Cairo v2 contract (for example OpenZeppelin account 0.7.0 or later), do not forget to add the parameter "1" after the privateKey parameter
-const rpcUrl = "RPC_URL";
-const account0 = account(privateKey, publicKey, "1", rpcUrl);
+const RPC_URL = "RPC_URL";
+const account0 = account(privateKey, public_key, "1", RPC_URL);
 
 // Call the buildTransaction method in order to build the transaction
 // slippage: The maximum acceptable slippage of the buyAmount amount.

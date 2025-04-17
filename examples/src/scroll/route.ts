@@ -10,20 +10,13 @@ async function main() {
     // Build route options
     const tokens = await fibrous.supportedTokens("scroll");
     try {
-        /**
-         * recommended that use the token address directly 
-         * because there may be more than one token with the same symbol.
-         */
-        const tokenInAddress = tokens.get("usdt")?.address;
-        const tokenOutAddress = tokens.get("usdc")?.address;
-        const tokenInDecimals = Number(tokens.get("usdt")?.decimals);
-        if (!tokenInAddress || !tokenOutAddress || !tokenInDecimals) {
-            throw new Error("Token not found");
-        }
+        const tokenInAddress = tokens["usdt"].address;
+        const tokenOutAddress = tokens["usdc"].address;
+        const tokenInDecimals = Number(tokens["usdt"].decimals);
         const inputAmount = BigNumber.from(parseUnits("5", tokenInDecimals));
         const reverse = false;
         // Converting 5 USDT to USDC
-        const route = await fibrous.getBestRoute(   
+        const route = await fibrous.getBestRoute(
             inputAmount,
             tokenInAddress,
             tokenOutAddress,

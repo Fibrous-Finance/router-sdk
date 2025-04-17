@@ -1,9 +1,4 @@
-import {
-    approveToERC20,
-    buildHeaders,
-    buildRouteUrl,
-    buildRouteUrlBatch,
-} from "../utils";
+import { approveToERC20, buildHeaders, buildRouteUrl } from "../utils";
 import {
     RouteParams,
     RouteResponse,
@@ -12,9 +7,8 @@ import {
     RouteOverrides,
     RouteExecuteParams,
     RouteExecuteBatchParams,
-    RouteParamsBatch,
 } from "../types";
-import { fibrousRouterABI, erc20ABI } from "../abis";
+import { fibrousRouterABI, erc20ABI, baseRouterAbi } from "../abis";
 import { BigNumber } from "@ethersproject/bignumber";
 import { ethers, Wallet } from "ethers";
 import { Call } from "starknet";
@@ -26,6 +20,7 @@ export class Router {
         "0x00f6f4CF62E3C010E0aC2451cC7807b5eEc19a40b0FaaCd00CCA3914280FDf5a";
     readonly SCROLL_ROUTER_ADDRESS =
         "0x4bb92d3f730d5a7976707570228f5cb7e09094c5";
+    readonly BASE_ROUTER_ADDRESS = "0x274602a953847d807231d2370072F5f4E4594B44";
 
     private readonly apiUrl: string;
     private readonly apiKey: string | null;
@@ -81,45 +76,11 @@ export class Router {
         }).then((response) => response.json());
     }
 
-    async getBestRouteBatch(
-        amounts: BigNumber[],
-        tokenInAddresses: string[],
-        tokenOutAddresses: string[],
-        chainName: string,
-        options?: Partial<RouteOverrides>,
-    ): Promise<RouteResponse[]> {
-        const routeParams: RouteParamsBatch = {
-            amounts,
-            tokenInAddresses,
-            tokenOutAddresses,
-        };
-
-        for (const [key, value] of Object.entries(options ?? {})) {
-            if (key == "excludeProtocols") {
-                routeParams.excludeProtocols = (value as ProtocolId[]).join(
-                    ",",
-                );
-            }
-            routeParams[key as any] = value;
-        }
-
-        const routeUrl = buildRouteUrlBatch(
-            `${this.apiUrl}/${chainName}/routeBatch`,
-            routeParams,
-        );
-
-        const response = await fetch(routeUrl, {
-            headers: buildHeaders(this.apiKey),
-        }).then((response) => response.json());
-
-        return response;
-    }
-
     /**
      * @param chainName Chain ID to get the supported tokens for
      * @returns Supported token list
      */
-    async supportedTokens(chainName: string): Promise<Map<string, Token>> {
+    async supportedTokens(chainName: string): Promise<Record<string, Token>> {
         const tokens: Token[] = await fetch(
             `${this.GRAPH_API_URL}/${chainName}/tokens`,
             {
@@ -128,15 +89,29 @@ export class Router {
         ).then((response) => response.json());
 
         // Create a record of tokens by symbol
-        const tokensMap = new Map<string, Token>();
-        tokens.forEach((token) => {
-            const symbol = token.symbol.toLocaleLowerCase();
-            // Only add token if symbol doesn't already exist in map
-            if (!tokensMap.has(symbol)) {
-                tokensMap.set(symbol, token);
-            }
-        });
-        return tokensMap;
+        return tokens.reduce(
+            (acc, token) =>
+                Object.assign(acc, {
+                    [token.symbol.toLocaleLowerCase()]: token,
+                }),
+            {},
+        );
+    }
+    /**
+     *
+     * @param address Token address
+     * @param chainName Chain ID to get the token for
+     * @returns Token object
+     */
+
+    async getToken(address: string, chainName: string): Promise<Token | null> {
+        const token: Token = await fetch(
+            `${this.GRAPH_API_URL}/${chainName}/tokens/${address}`,
+            {
+                headers: buildHeaders(this.apiKey),
+            },
+        ).then((response) => response.json());
+        return token;
     }
 
     /**
@@ -176,7 +151,7 @@ export class Router {
     }
 
     /**
-     * Builds a Scroll approve transaction
+     * Builds a EVM approve transaction
      * @param amount: Amount to approve, formatted
      * @param tokenAddress: Token to approve
      * @param account: Wallet to use
@@ -207,13 +182,32 @@ export class Router {
             );
             await approveTx.wait();
             return true;
+        } else if (chainName == "base") {
+            const tokenContract = new ethers.Contract(
+                tokenAddress,
+                erc20ABI,
+                account,
+            );
+            const allowance = await tokenContract.allowance(
+                await account.getAddress(),
+                this.BASE_ROUTER_ADDRESS,
+            );
+            if (Number(allowance) >= Number(amount)) {
+                return true;
+            }
+            const approveTx = await tokenContract.approve(
+                this.BASE_ROUTER_ADDRESS,
+                amount.toString(),
+            );
+            await approveTx.wait();
+            return true;
         } else {
             throw new Error("Invalid chain ID");
         }
     }
 
     /**
-     * Builds a Starknet or Scroll transaction out of the route response
+     * Builds a Starknet, Scroll or Base transaction out of the route response
      * @param route: Route response
      * @param slippage: Slippage percentage (1 = 1%)
      * @param receiverAddress: Address to receive the tokens
@@ -248,20 +242,33 @@ export class Router {
         }
 
         const routeUrl = buildRouteUrl(
-            `${this.apiUrl}/${chainName}/execute`,
+            `${this.apiUrl}/${chainName}/route`,
             routeParams,
         );
-        const calldata = await fetch(routeUrl, {
+        const route = await fetch(routeUrl, {
             headers: buildHeaders(this.apiKey),
         }).then((response) => response.json());
-
+        const calldataParams = {
+            route_response: route,
+            signer: destination,
+            slippage: slippage,
+        };
+        const calldataUrl = `${this.GRAPH_API_URL}/${chainName}/helper/calldata`;
+        const calldata = await fetch(calldataUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                ...buildHeaders(this.apiKey),
+            },
+            body: JSON.stringify(calldataParams),
+        }).then((response) => response.json());
         if (chainName == "starknet") {
             return {
                 contractAddress: this.STARKNET_ROUTER_ADDRESS,
                 entrypoint: "swap",
                 calldata: calldata,
             };
-        } else if (chainName == "scroll") {
+        } else if (chainName == "scroll" || chainName == "base") {
             return calldata;
         } else {
             throw new Error("Invalid chain ID");
@@ -326,7 +333,7 @@ export class Router {
     }
 
     /**
-     * Create a contract instance for the Scroll Router
+     * Create a contract instance for the Scroll or Base Router
      * @param rpcUrl RPC URL to connect to
      * @returns Contract instance
      */
@@ -338,13 +345,20 @@ export class Router {
                 new ethers.JsonRpcProvider(rpcUrl),
             );
             return contract;
+        } else if (chainName == "base") {
+            const contract = new ethers.Contract(
+                this.BASE_ROUTER_ADDRESS,
+                baseRouterAbi,
+                new ethers.JsonRpcProvider(rpcUrl),
+            );
+            return contract;
         } else {
             throw new Error("Invalid chain ID");
         }
     }
 
     /**
-     * Create a contract instance for the Scroll Router with a wallet
+     * Create a contract instance for the Scroll or Base Router with a wallet
      * @param account Wallet to use
      * @returns Contract instance
      */
@@ -353,6 +367,13 @@ export class Router {
             const contract = new ethers.Contract(
                 this.SCROLL_ROUTER_ADDRESS,
                 fibrousRouterABI,
+                account,
+            );
+            return contract;
+        } else if (chainName == "base") {
+            const contract = new ethers.Contract(
+                this.BASE_ROUTER_ADDRESS,
+                baseRouterAbi,
                 account,
             );
             return contract;

@@ -14,7 +14,7 @@ Fetching Tokens
 
 ```javascript
 import { Router as FibrousRouter } from "fibrous-router-sdk";
-const chainName = "scroll"; 
+const chainName = "base";
 const router = new FibrousRouter();
 const tokens = await router.supportedTokens(chainName); // returns array as token type (src/types/token.ts)
 ```
@@ -27,7 +27,7 @@ import { BigNumber } from "@ethersproject/bignumber";
 import { parseUnits } from "ethers";
 
 const router = new FibrousRouter();
-const chainName = "scroll"; 
+const chainName = "base";
 
 const tokenInAddress = tokens["eth"].address;
 const tokenOutAddress = tokens["usdc"].address;
@@ -41,10 +41,9 @@ const route = await fibrous.getBestRoute(
     chainName,
 );
 // returns route type (src/types/route.ts)
-
 ```
 
-Build transaction on Scroll
+Build transaction on Base
 
 ```javascript
 import { BigNumber } from "@ethersproject/bignumber";
@@ -52,14 +51,14 @@ import { Router as FibrousRouter } from "fibrous-router-sdk";
 import { parseUnits } from "ethers";
 import { account } from "./account";
 
-// RPC URL for the Scroll network, you can change this to the RPC URL of your choice
-const RPC_URL = "https://rpc.scroll.io";
+// RPC URL for the Base network, you can change this to the RPC URL of your choice
+const RPC_URL = "https://mainnet.base.org";
 // Destination address for the swap
 const destination = "<DESTINATION_ADDRESS>";
 // Private key of the account that will be used to sign the transaction
 const privateKey = "<PRIVATE_KEY>";
 
-const chainName = "scroll";
+const chainName = "base";
 // Create a new router instance
 const fibrous = new FibrousRouter();
 
@@ -100,7 +99,7 @@ if (approveResponse === true) {
             swapCall.swap_parameters,
         );
         await tx.wait();
-        console.log(`https://scrollscan.com/tx/${tx.hash}`);
+        console.log(`https://basescan.com/tx/${tx.hash}`);
     } catch (e) {
         console.error("Error swapping tokens: ", e);
     }

@@ -1,26 +1,32 @@
 import { Router as FibrousRouter } from "fibrous-router-sdk";
+
+import { parseUnits } from "ethers";
 import { BigNumber } from "@ethersproject/bignumber";
 async function main() {
-    const chainName = "starknet";
     // Create a new router instance
     const fibrous = new FibrousRouter();
 
     // Build route options
-    const tokens = await fibrous.supportedTokens(chainName);
+    const tokens = await fibrous.supportedTokens("base");
+    const usdtToken = await fibrous.getToken(
+        "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2",
+        "base",
+    );
     try {
-        const tokenInAddress = tokens["eth"].address;
+        if (!usdtToken) {
+            throw new Error("Token not found");
+        }
+        const tokenInAddress = usdtToken.address;
         const tokenOutAddress = tokens["usdc"].address;
-        const tokenInDecimals = tokens["eth"].decimals;
-        const inputAmount = BigNumber.from(
-            1n * 10n ** BigInt(tokenInDecimals - 1),
-        ); // 0.1 ETH
+        const tokenInDecimals = Number(usdtToken.decimals);
+        const inputAmount = BigNumber.from(parseUnits("5", tokenInDecimals));
         const reverse = false;
-        // Converting 1 ETH to USDC
+        // Converting 5 USDT to USDC
         const route = await fibrous.getBestRoute(
             inputAmount,
             tokenInAddress,
             tokenOutAddress,
-            chainName,
+            "base",
             {
                 reverse,
             },
@@ -31,4 +37,6 @@ async function main() {
     }
 }
 
-main();
+main().catch((e) => {
+    console.error("Error: ", e);
+});

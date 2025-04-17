@@ -4,12 +4,12 @@ import { Router as FibrousRouter } from "fibrous-router-sdk";
 import { parseUnits } from "ethers";
 import { account } from "./account";
 
-// RPC URL for the Scroll network, you can change this to the RPC URL of your choice
-const RPC_URL = "https://rpc.scroll.io";
-// Destination address for the swap (required)
-const destination = "<DESTINATION_ADDRESS>";
+// RPC URL for the Base network, you can change this to the RPC URL of your choice
+const RPC_URL = "https://mainnet.base.org";
+// Destination address for the swap (optional)
+const destination = "";
 // Private key of the account that will be used to sign the transaction
-const privateKey = "<PRIVATE_KEY";
+const privateKey = "<PRIVATE_KEY>";
 
 async function main() {
     // Create a new router instance
@@ -17,17 +17,18 @@ async function main() {
 
     // Create a new contract instance
     const account0 = account(privateKey, RPC_URL);
-    const contractwwallet = await fibrous.getContractWAccount(
-        account0,
-        "scroll",
-    );
+    const contractwwallet = await fibrous.getContractWAccount(account0, "base");
 
     // Build route options
-    const tokens = await fibrous.supportedTokens("scroll");
+    const tokens = await fibrous.supportedTokens("base");
+    const ethToken = await fibrous.getToken(
+        "0x0000000000000000000000000000000000000000",
+        "base",
+    );
 
-    const tokenInAddress = tokens["usdt"].address;
-    const tokenOutAddress = tokens["usdc"].address;
-    const tokenInDecimals = Number(tokens["usdt"].decimals);
+    const tokenInAddress = tokens["usdc"].address;
+    const tokenOutAddress = ethToken.address;
+    const tokenInDecimals = Number(tokens["usdc"].decimals);
     const inputAmount = BigNumber.from(parseUnits("5", tokenInDecimals));
 
     // Call the buildTransaction method in order to build the transaction
@@ -38,15 +39,15 @@ async function main() {
         tokenInAddress,
         tokenOutAddress,
         slippage,
-        destination,
-        "scroll",
+        destination || account0.address,
+        "base",
     );
 
     const approveResponse = await fibrous.buildApproveEVM(
         inputAmount,
         tokenInAddress,
         account0,
-        "scroll",
+        "base",
     );
 
     if (approveResponse === true) {
@@ -56,7 +57,7 @@ async function main() {
                 swapCall.swap_parameters,
             );
             await tx.wait();
-            console.log(`https://scrollscan.com/tx/${tx.hash}`);
+            console.log(`https://basescan.com/tx/${tx.hash}`);
         } catch (e) {
             console.error("Error swapping tokens: ", e);
         }

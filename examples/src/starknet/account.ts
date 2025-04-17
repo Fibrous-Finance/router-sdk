@@ -2,13 +2,13 @@ import { Account, CairoVersion, Provider, RpcProvider } from "starknet";
 
 export function account(
     privateKey: string,
-    publicKey: string,
+    public_key: string,
     isCairo1: string,
-    rpcUrl: string,
+    rpc_url: string,
 ) {
     const provider = new RpcProvider({
-        nodeUrl: rpcUrl,
+        nodeUrl: rpc_url,
     });
-    const account0 = new Account(provider, publicKey, privateKey);
+    const account0 = new Account(provider, public_key, privateKey);
     return account0;
 }
