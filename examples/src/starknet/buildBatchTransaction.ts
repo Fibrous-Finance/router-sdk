@@ -30,7 +30,9 @@ async function main() {
     const privateKey = process.env.STARKNET_PRIVATE_KEY;
     const RPC_URL = process.env.STARKNET_RPC_URL;
     const destination = process.env.STARKNET_PUBLIC_KEY; // The address to receive the tokens after the swap is completed (required)
-
+    if (!privateKey || !public_key || !RPC_URL || !destination) {
+        throw new Error("Missing environment variables");
+    }
     // Call the buildTransaction method in order to build the transaction
     // slippage: The maximum acceptable slippage of the buyAmount amount.
     const slippage = 1; // 1%
