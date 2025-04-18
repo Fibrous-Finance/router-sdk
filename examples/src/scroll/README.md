@@ -14,7 +14,7 @@ Fetching Tokens
 
 ```javascript
 import { Router as FibrousRouter } from "fibrous-router-sdk";
-const chainName = "scroll"; 
+const chainName = "scroll";
 const router = new FibrousRouter();
 const tokens = await router.supportedTokens(chainName); // returns array as token type (src/types/token.ts)
 ```
@@ -27,7 +27,7 @@ import { BigNumber } from "@ethersproject/bignumber";
 import { parseUnits } from "ethers";
 
 const router = new FibrousRouter();
-const chainName = "scroll"; 
+const chainName = "scroll";
 
 const tokenInAddress = tokens["eth"].address;
 const tokenOutAddress = tokens["usdc"].address;
@@ -41,7 +41,6 @@ const route = await fibrous.getBestRoute(
     chainName,
 );
 // returns route type (src/types/route.ts)
-
 ```
 
 Build transaction on Scroll
@@ -53,11 +52,11 @@ import { parseUnits } from "ethers";
 import { account } from "./account";
 
 // RPC URL for the Scroll network, you can change this to the RPC URL of your choice
-const RPC_URL = "https://rpc.scroll.io";
-// Destination address for the swap
-const destination = "<DESTINATION_ADDRESS>";
+const RPC_URL = process.env.SCROLL_RPC_URL;
+// Destination address for the swap (required)
+const destination = process.env.EVM_PUBLIC_KEY;
 // Private key of the account that will be used to sign the transaction
-const privateKey = "<PRIVATE_KEY>";
+const privateKey = process.env.EVM_PRIVATE_KEY;
 
 const chainName = "scroll";
 // Create a new router instance
@@ -66,14 +65,21 @@ const fibrous = new FibrousRouter();
 // Create a new contract instance
 const account0 = account(privateKey, RPC_URL);
 const contractwwallet = await fibrous.getContractWAccount(account0, chainName);
+const provider = new ethers.JsonRpcProvider(RPC_URL);
 
 // Build route options
 const tokens = await fibrous.supportedTokens(chainName);
-
-const tokenInAddress = tokens["usdt"].address;
+const inputToken = await fibrous.getToken(
+    "0xf55bec9cafdbe8730f096aa55dad6d22d44099df",
+    "scroll",
+);
+if (!inputToken) {
+    throw new Error("Input token not found");
+}
+const tokenInAddress = inputToken.address;
 const tokenOutAddress = tokens["usdc"].address;
-const tokenInDecimals = Number(tokens["usdt"].decimals);
-const inputAmount = BigNumber.from(5n * 10n ** BigInt(tokenInDecimals));
+const tokenInDecimals = Number(inputToken.decimals);
+const inputAmount = BigNumber.from(parseUnits("5", tokenInDecimals));
 
 // Call the buildTransaction method in order to build the transaction
 // slippage: The maximum acceptable slippage of the buyAmount amount.
@@ -95,10 +101,18 @@ const approveResponse = await fibrous.buildApproveEVM(
 );
 if (approveResponse === true) {
     try {
-        const tx = await contractwwallet.swap(
-            swapCall.route,
-            swapCall.swap_parameters,
-        );
+      const feeData = await provider.getFeeData();
+            if (!feeData.gasPrice) {
+                console.log("gasPrice not found");
+                return;
+            }
+            const tx = await contractwwallet.swap(
+                swapCall.route,
+                swapCall.swap_parameters,
+                {
+                    gasPrice: feeData.gasPrice * 2n,
+                }
+            );
         await tx.wait();
         console.log(`https://scrollscan.com/tx/${tx.hash}`);
     } catch (e) {

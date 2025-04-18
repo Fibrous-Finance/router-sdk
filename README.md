@@ -27,6 +27,7 @@ Check out the for [Starknet examples](./examples/src/starknet/) and [Starknet RE
 
 Check out the for [Scroll examples](./examples/src/scroll/) and [Scroll README](./examples/src/scroll/README.md) folder for more detailed examples.
 
+Check out the for [Base examples](./examples/src/base/) and [Base README](./examples/src/base/README.md) folder for more detailed examples.
 ## Contributing
 
 We welcome contributions from the community. Please review our [contributing guidelines](./docs/CONTRIBUTING.md) to get started.
