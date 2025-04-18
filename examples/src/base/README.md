@@ -14,9 +14,9 @@ Fetching Tokens
 
 ```javascript
 import { Router as FibrousRouter } from "fibrous-router-sdk";
-const chainName = "scroll";
+const chainName = "base";
 const router = new FibrousRouter();
-const tokens = await router.supportedTokens(chainName); // returns array as token type (src/types/token.ts)
+const tokens = await router.supportedTokens(chainName); // returns verified token array as token type (src/types/token.ts)
 ```
 
 Fetching route
@@ -27,12 +27,18 @@ import { BigNumber } from "@ethersproject/bignumber";
 import { parseUnits } from "ethers";
 
 const router = new FibrousRouter();
-const chainName = "scroll";
-
-const tokenInAddress = tokens["eth"].address;
+const chainName = "base";
+const inputToken = await fibrous.getToken(
+    "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2",
+    "base",
+);
+if (!inputToken) {
+    throw new Error("Input token not found");
+}
+const tokenInAddress = inputToken.address;
 const tokenOutAddress = tokens["usdc"].address;
-const tokenInDecimals = tokens["eth"].decimals;
-const inputAmount = BigNumber.from(1n * 10n ** BigInt(tokenInDecimals));
+const tokenInDecimals = Number(inputToken.decimals);
+const inputAmount = BigNumber.from(parseUnits("5", tokenInDecimals));
 
 const route = await fibrous.getBestRoute(
     inputAmount, // amount
@@ -43,7 +49,7 @@ const route = await fibrous.getBestRoute(
 // returns route type (src/types/route.ts)
 ```
 
-Build transaction on Scroll
+Build transaction on Base
 
 ```javascript
 import { BigNumber } from "@ethersproject/bignumber";
@@ -51,14 +57,14 @@ import { Router as FibrousRouter } from "fibrous-router-sdk";
 import { parseUnits } from "ethers";
 import { account } from "./account";
 
-// RPC URL for the Scroll network, you can change this to the RPC URL of your choice
-const RPC_URL = process.env.SCROLL_RPC_URL;
-// Destination address for the swap (required)
+// RPC URL for the Base network, you can change this to the RPC URL of your choice
+const RPC_URL = process.env.BASE_RPC_URL;
+// Destination address for the swap
 const destination = process.env.EVM_PUBLIC_KEY;
 // Private key of the account that will be used to sign the transaction
 const privateKey = process.env.EVM_PRIVATE_KEY;
 
-const chainName = "scroll";
+const chainName = "base";
 // Create a new router instance
 const fibrous = new FibrousRouter();
 
@@ -70,8 +76,8 @@ const provider = new ethers.JsonRpcProvider(RPC_URL);
 // Build route options
 const tokens = await fibrous.supportedTokens(chainName);
 const inputToken = await fibrous.getToken(
-    "0xf55bec9cafdbe8730f096aa55dad6d22d44099df",
-    "scroll",
+    "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2",
+    "base",
 );
 if (!inputToken) {
     throw new Error("Input token not found");
@@ -101,20 +107,20 @@ const approveResponse = await fibrous.buildApproveEVM(
 );
 if (approveResponse === true) {
     try {
-      const feeData = await provider.getFeeData();
-            if (!feeData.gasPrice) {
-                console.log("gasPrice not found");
-                return;
-            }
-            const tx = await contractwwallet.swap(
-                swapCall.route,
-                swapCall.swap_parameters,
-                {
-                    gasPrice: feeData.gasPrice * 2n,
-                }
-            );
+        const feeData = await provider.getFeeData();
+        if (!feeData.gasPrice) {
+            console.log("gasPrice not found");
+            return;
+        }
+        const tx = await contractwwallet.swap(
+            swapCall.route,
+            swapCall.swap_parameters,
+            {
+                gasPrice: feeData.gasPrice * 2n,
+            },
+        );
         await tx.wait();
-        console.log(`https://scrollscan.com/tx/${tx.hash}`);
+        console.log(`https://basescan.org/tx/${tx.hash}`);
     } catch (e) {
         console.error("Error swapping tokens: ", e);
     }

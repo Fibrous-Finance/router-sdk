@@ -7,6 +7,6 @@
   "license": "MIT",
   "private": false,
   "dependencies": {
-    "fibrous-router-sdk": "0.3.2"
+    "fibrous-router-sdk": "^0.4.3"
   }
 }

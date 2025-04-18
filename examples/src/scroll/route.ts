@@ -1,6 +1,4 @@
-// import { Router as FibrousRouter } from "fibrous-router-sdk";
-import { Router as FibrousRouter } from "../../../src";
-
+import { Router as FibrousRouter } from "fibrous-router-sdk";
 import { parseUnits } from "ethers";
 import { BigNumber } from "@ethersproject/bignumber";
 async function main() {
@@ -10,20 +8,20 @@ async function main() {
     // Build route options
     const tokens = await fibrous.supportedTokens("scroll");
     try {
-        /**
-         * recommended that use the token address directly 
-         * because there may be more than one token with the same symbol.
-         */
-        const tokenInAddress = tokens.get("usdt")?.address;
-        const tokenOutAddress = tokens.get("usdc")?.address;
-        const tokenInDecimals = Number(tokens.get("usdt")?.decimals);
-        if (!tokenInAddress || !tokenOutAddress || !tokenInDecimals) {
-            throw new Error("Token not found");
+        const inputToken = await fibrous.getToken(
+            "0xf55bec9cafdbe8730f096aa55dad6d22d44099df",
+            "scroll",
+        );
+        if (!inputToken) {
+            throw new Error("Input token not found");
         }
+        const tokenInAddress = inputToken.address;
+        const tokenOutAddress = tokens["usdc"].address;
+        const tokenInDecimals = Number(inputToken.decimals);
         const inputAmount = BigNumber.from(parseUnits("5", tokenInDecimals));
         const reverse = false;
         // Converting 5 USDT to USDC
-        const route = await fibrous.getBestRoute(   
+        const route = await fibrous.getBestRoute(
             inputAmount,
             tokenInAddress,
             tokenOutAddress,
