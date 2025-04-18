@@ -7,10 +7,17 @@ async function main() {
 
     // Build route options
     const tokens = await fibrous.supportedTokens(chainName);
+    const inputToken = await fibrous.getToken(
+        "0x068f5c6a61780768455de69077e07e89787839bf8166decfbf92b645209c0fb8",
+        "starknet",
+    );
+    if (!inputToken) {
+        throw new Error("Input token not found");
+    }
     try {
-        const tokenInAddress = tokens["eth"].address;
+        const tokenInAddress = inputToken.address;
         const tokenOutAddress = tokens["usdc"].address;
-        const tokenInDecimals = tokens["eth"].decimals;
+        const tokenInDecimals = Number(inputToken.decimals);
         const inputAmount = BigNumber.from(
             1n * 10n ** BigInt(tokenInDecimals - 1),
         ); // 0.1 ETH

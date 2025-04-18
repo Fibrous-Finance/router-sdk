@@ -1,33 +1,42 @@
 import { BigNumber } from "@ethersproject/bignumber";
 import { Router as FibrousRouter } from "fibrous-router-sdk";
-
-import { parseUnits } from "ethers";
+import { ethers, parseUnits } from "ethers";
 import { account } from "./account";
-
+import { config } from "dotenv";
+config();
 // RPC URL for the Scroll network, you can change this to the RPC URL of your choice
-const RPC_URL = "https://rpc.scroll.io";
+const RPC_URL = process.env.SCROLL_RPC_URL;
 // Destination address for the swap (required)
-const destination = "<DESTINATION_ADDRESS>";
+const destination = process.env.EVM_PUBLIC_KEY;
 // Private key of the account that will be used to sign the transaction
-const privateKey = "<PRIVATE_KEY";
+const privateKey = process.env.EVM_PRIVATE_KEY;
 
 async function main() {
     // Create a new router instance
     const fibrous = new FibrousRouter();
-
+    if (!privateKey || !RPC_URL || !destination) {
+        throw new Error("Missing environment variables");
+    }
     // Create a new contract instance
     const account0 = account(privateKey, RPC_URL);
     const contractwwallet = await fibrous.getContractWAccount(
         account0,
         "scroll",
     );
+    const provider = new ethers.JsonRpcProvider(RPC_URL);
 
     // Build route options
     const tokens = await fibrous.supportedTokens("scroll");
-
-    const tokenInAddress = tokens["usdt"].address;
+    const inputToken = await fibrous.getToken(
+        "0xf55bec9cafdbe8730f096aa55dad6d22d44099df",
+        "scroll",
+    );
+    if (!inputToken) {
+        throw new Error("Input token not found");
+    }
+    const tokenInAddress = inputToken.address;
     const tokenOutAddress = tokens["usdc"].address;
-    const tokenInDecimals = Number(tokens["usdt"].decimals);
+    const tokenInDecimals = Number(inputToken.decimals);
     const inputAmount = BigNumber.from(parseUnits("5", tokenInDecimals));
 
     // Call the buildTransaction method in order to build the transaction
@@ -51,9 +60,17 @@ async function main() {
 
     if (approveResponse === true) {
         try {
+            const feeData = await provider.getFeeData();
+            if (!feeData.gasPrice) {
+                console.log("gasPrice not found");
+                return;
+            }
             const tx = await contractwwallet.swap(
                 swapCall.route,
                 swapCall.swap_parameters,
+                {
+                    gasPrice: feeData.gasPrice * 2n,
+                }
             );
             await tx.wait();
             console.log(`https://scrollscan.com/tx/${tx.hash}`);
