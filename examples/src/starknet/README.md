@@ -96,12 +96,18 @@ if (starknet.isConnected) {
 // Usage on backend
 
 const provider = new Provider();
-const privateKey0 = "YOUR_PRIVATE_KEY";
-const accountAddress0 = "YOUR_WALLET_ADDRESS";
+const PUBLIC_KEY = process.env.STARKNET_PUBLIC_KEY;
+const PRIVATE_KEY = process.env.STARKNET_PRIVATE_KEY;
+const RPC_URL = process.env.STARKNET_RPC_URL;
+const DESTINATION = process.env.STARKNET_PUBLIC_KEY; // The address to receive the tokens after the swap is completed (required)
+
+if (!DESTINATION || !PRIVATE_KEY || !RPC_URL || !PUBLIC_KEY) {
+    throw new Error("Missing environment variables");
+}
+
 // https://www.starknetjs.com/docs/guides/connect_account
 // If this account is based on a Cairo v2 contract (for example OpenZeppelin account 0.7.0 or later), do not forget to add the parameter "1" after the privateKey parameter
-const RPC_URL = "RPC_URL";
-const account0 = account(privateKey, public_key, "1", RPC_URL);
+const account0 = account(PRIVATE_KEY, PUBLIC_KEY, "1", RPC_URL);
 
 // Call the buildTransaction method in order to build the transaction
 // slippage: The maximum acceptable slippage of the buyAmount amount.
@@ -111,7 +117,7 @@ const swapCall = await fibrous.buildTransaction(
     tokenInAddress,
     tokenOutAddress,
     slippage,
-    receiverAddress,
+    DESTINATION,
     chainName
 );
 
@@ -198,8 +204,8 @@ const privateKey0 = "YOUR_PRIVATE_KEY";
 const accountAddress0 = "YOUR_WALLET_ADDRESS";
 // https://www.starknetjs.com/docs/guides/connect_account
 // If this account is based on a Cairo v2 contract (for example OpenZeppelin account 0.7.0 or later), do not forget to add the parameter "1" after the privateKey parameter
-const RPC_URL = "RPC_URL";
-const account0 = account(privateKey, public_key, "1", RPC_URL);
+const rpcUrl = "RPC_URL";
+const account0 = account(privateKey, publicKey, "1", rpcUrl);
 
 // Call the buildTransaction method in order to build the transaction
 // slippage: The maximum acceptable slippage of the buyAmount amount.
