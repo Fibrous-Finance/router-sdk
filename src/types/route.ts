@@ -28,6 +28,14 @@ export type RouteExecuteParams = {
     Omit<RouteOverrides, "excludeProtocols"> & { excludeProtocols: string }
 >;
 
+export type RouteParamsBatch = {
+    amounts: BigNumber[];
+    tokenInAddresses: string[];
+    tokenOutAddresses: string[];
+} & Partial<
+    Omit<RouteOverrides, "excludeProtocols"> & { excludeProtocols: string }
+>;
+
 export type RouteExecuteBatchParams = {
     amounts: string[];
     tokenInAddresses: string[];
@@ -37,6 +45,7 @@ export type RouteExecuteBatchParams = {
 } & Partial<
     Omit<RouteOverrides, "excludeProtocols"> & { excludeProtocols: string }
 >;
+
 
 export type RouteFailure = {
     success: false;
