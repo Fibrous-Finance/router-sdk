@@ -4,7 +4,7 @@
   </a>
 </p>
 
-# Fibrous Finance SDK (v0.5.0)
+# Fibrous Finance SDK (v0.5.1)
 
 ## Installation
 

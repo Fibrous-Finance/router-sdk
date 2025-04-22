@@ -5,6 +5,7 @@ import {
     Percent,
     RouteExecuteParams,
     RouteExecuteBatchParams,
+    RouteParamsBatch,
 } from "../types";
 import { BigNumberish, uint256 } from "starknet";
 
@@ -20,6 +21,28 @@ export const buildRouteUrl = (
 ): string => {
     const requestParams = Object.keys(params)
         .map((key) => `${key}=${params[key]}`)
+        .join("&");
+    return `${url}?${requestParams}`;
+};
+
+/**
+ * Builds the route URL for batch requests
+ * @param url: Base URL
+ * @param params: Parameters for the route
+ * @returns Final URL
+ */
+export const buildRouteUrlBatch = (
+    url: string,
+    params: RouteParamsBatch,
+): string => {
+    const requestParams = Object.keys(params)
+        .map((key) => {
+            // Handle array-like values by joining with commas
+            const value = Array.isArray(params[key])
+                ? params[key].join(',')
+                : params[key];
+            return `${key}=${value}`;
+        })
         .join("&");
     return `${url}?${requestParams}`;
 };
