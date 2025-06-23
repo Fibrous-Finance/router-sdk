@@ -341,7 +341,7 @@ export class Router {
         destination: string,
         chainName: string,
         options?: Partial<RouteOverrides>,
-    ): Promise<Call | EvmTransactionData> {
+    ): Promise<Call[] | EvmTransactionData> {
         const amounts = inputAmounts.map(
             (amount) => "0x" + amount.toString(16),
         );
@@ -382,7 +382,7 @@ export class Router {
                     calldata: call,
                 };
             });
-            return swapCalls[0];
+            return swapCalls;
         } else {
             return calldata as EvmTransactionData;
         }

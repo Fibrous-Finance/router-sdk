@@ -91,10 +91,21 @@ describe("Router Batch Operations", () => {
                 { headers: {} },
             );
 
-            if ("contractAddress" in result) {
-                expect(result.calldata).toEqual(["call1"]);
+            // Check if result is an array of Call objects (Starknet batch)
+            if (Array.isArray(result)) {
+                expect(result).toHaveLength(2);
+                expect(result[0]).toEqual({
+                    contractAddress: router.STARKNET_ROUTER_ADDRESS,
+                    entrypoint: "swap",
+                    calldata: ["call1"],
+                });
+                expect(result[1]).toEqual({
+                    contractAddress: router.STARKNET_ROUTER_ADDRESS,
+                    entrypoint: "swap",
+                    calldata: ["call2"],
+                });
             } else {
-                fail("Expected Starknet Call structure");
+                throw new Error("Expected array of Starknet Call structures");
             }
 
             // Case 2: With options
@@ -145,12 +156,18 @@ describe("Router Batch Operations", () => {
                 { headers: {} },
             );
 
-            if ("contractAddress" in result) {
-                expect(result.contractAddress).toBe(
-                    router.STARKNET_ROUTER_ADDRESS,
-                );
-                expect(result.entrypoint).toBe("swap");
-                expect(result.calldata).toEqual(["call1"]);
+            // Check if result is an array of Call objects (Starknet batch)
+            if (Array.isArray(result)) {
+                expect(result).toHaveLength(5);
+                result.forEach((call, index) => {
+                    expect(call.contractAddress).toBe(
+                        router.STARKNET_ROUTER_ADDRESS,
+                    );
+                    expect(call.entrypoint).toBe("swap");
+                    expect(call.calldata).toEqual([`call${index + 1}`]);
+                });
+            } else {
+                throw new Error("Expected array of Starknet Call structures");
             }
         });
     });
