@@ -1,6 +1,7 @@
-import { BigNumber } from "@ethersproject/bignumber";
-import { Router as FibrousRouter } from "fibrous-router-sdk";
+// import { Router as FibrousRouter } from "fibrous-router-sdk";
+import { Router as FibrousRouter } from "../../../src";
 import { Call } from "starknet";
+import { parseUnits } from "ethers";
 
 import { account } from "./account";
 
@@ -11,21 +12,30 @@ async function main() {
     // Get the supported tokens for the Starknet chain
     const tokens = await fibrous.supportedTokens("starknet");
 
-    const tokenInAddress_1 = tokens["eth"].address;
-    const tokenInAddress_2 = tokens["strk"].address;
-    const tokenInAddress_3 = tokens["usdc"].address;
+    const ethToken = tokens.get("eth");
+    const strkToken = tokens.get("strk");
+    const usdcToken = tokens.get("usdc");
+    const usdtToken = tokens.get("usdt");
 
-    const tokenOutAddress = tokens["usdt"].address;
+    if (!ethToken || !strkToken || !usdcToken || !usdtToken) {
+        throw new Error("Required tokens not found");
+    }
 
-    const tokenInDecimals_1 = tokens["eth"].decimals;
-    const tokenInDecimals_2 = tokens["strk"].decimals;
-    const tokenInDecimals_3 = tokens["usdc"].decimals;
+    const tokenInAddress_1 = ethToken.address;
+    const tokenInAddress_2 = strkToken.address;
+    const tokenInAddress_3 = usdcToken.address;
+
+    const tokenOutAddress = usdtToken.address;
+
+    const tokenInDecimals_1 = ethToken.decimals;
+    const tokenInDecimals_2 = strkToken.decimals;
+    const tokenInDecimals_3 = usdcToken.decimals;
 
     const inputAmounts = [
-        BigNumber.from(1n * 10n ** BigInt(tokenInDecimals_1 - 3)), // 0.001 ETH
-        BigNumber.from(10n * 10n ** BigInt(tokenInDecimals_2)), // 0.001 STRK
-        BigNumber.from(5n * 10n ** BigInt(tokenInDecimals_3)), // 5 USDC
-    ]; // 0.001 ETH
+        BigInt(parseUnits("0.001", tokenInDecimals_1)), // 0.001 ETH
+        BigInt(parseUnits("10", tokenInDecimals_2)), // 10 STRK
+        BigInt(parseUnits("5", tokenInDecimals_3)), // 5 USDC
+    ];
     const public_key = process.env.STARKNET_PUBLIC_KEY;
     const privateKey = process.env.STARKNET_PRIVATE_KEY;
     const RPC_URL = process.env.STARKNET_RPC_URL;
@@ -51,7 +61,6 @@ async function main() {
         "starknet",
     );
 
-
     // https://www.starknetjs.com/docs/guides/connect_account
     // If this account is based on a Cairo v2 contract (for example OpenZeppelin account 0.7.0 or later), do not forget to add the parameter "1" after the privateKey parameter
 
@@ -64,8 +73,18 @@ async function main() {
         );
         approveCalls.push(approveCall);
     }
-    const resp = await account0.execute([...approveCalls, ...swapCalls]);
-    console.log(`https://starkscan.co/tx/${resp.transaction_hash}`);
+    // Type guard: Starknet chains return Call[]
+    if (
+        Array.isArray(swapCalls) &&
+        swapCalls.every(
+            (call) => "contractAddress" in call && "entrypoint" in call,
+        )
+    ) {
+        const resp = await account0.execute([...approveCalls, ...swapCalls]);
+        console.log(`https://starkscan.co/tx/${resp.transaction_hash}`);
+    } else {
+        console.error("Invalid swap call data for Starknet batch transaction");
+    }
 }
 
 main();

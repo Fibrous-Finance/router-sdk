@@ -1,4 +1,5 @@
-import { Router as FibrousRouter } from "fibrous-router-sdk";
+// import { Router as FibrousRouter } from "fibrous-router-sdk";
+import { Router as FibrousRouter } from "../../../src";
 
 // Example of getting a list of tokens
 async function main() {

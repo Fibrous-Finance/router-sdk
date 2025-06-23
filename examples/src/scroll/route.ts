@@ -1,6 +1,6 @@
-import { Router as FibrousRouter } from "fibrous-router-sdk";
+// import { Router as FibrousRouter } from "fibrous-router-sdk";
+import { Router as FibrousRouter } from "../../../src";
 import { parseUnits } from "ethers";
-import { BigNumber } from "@ethersproject/bignumber";
 async function main() {
     // Create a new router instance
     const fibrous = new FibrousRouter();
@@ -16,9 +16,13 @@ async function main() {
             throw new Error("Input token not found");
         }
         const tokenInAddress = inputToken.address;
-        const tokenOutAddress = tokens["usdc"].address;
+        const usdcToken = tokens.get("usdc");
+        if (!usdcToken) {
+            throw new Error("USDC token not found");
+        }
+        const tokenOutAddress = usdcToken.address;
         const tokenInDecimals = Number(inputToken.decimals);
-        const inputAmount = BigNumber.from(parseUnits("5", tokenInDecimals));
+        const inputAmount = BigInt(parseUnits("5", tokenInDecimals));
         const reverse = false;
         // Converting 5 USDT to USDC
         const route = await fibrous.getBestRoute(

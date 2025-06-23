@@ -1,9 +1,8 @@
-import { BigNumber } from "@ethersproject/bignumber";
-import { Router as FibrousRouter } from "fibrous-router-sdk";
+// import { Router as FibrousRouter } from "fibrous-router-sdk";
+import { Router as FibrousRouter } from "../../../src";
 import { ethers, parseUnits } from "ethers";
+import "dotenv/config";
 import { account } from "./account";
-import { config } from "dotenv";
-config();
 
 // RPC URL for the Base network, you can change this to the RPC URL of your choice
 const RPC_URL = process.env.BASE_RPC_URL;
@@ -33,9 +32,13 @@ async function main() {
         throw new Error("Input token not found");
     }
     const tokenInAddress = inputToken.address;
-    const tokenOutAddress = tokens["usdc"].address;
+    const usdcToken = tokens.get("usdc");
+    if (!usdcToken) {
+        throw new Error("USDC token not found");
+    }
+    const tokenOutAddress = usdcToken.address;
     const tokenInDecimals = Number(inputToken.decimals);
-    const inputAmount = BigNumber.from(parseUnits("5", tokenInDecimals));
+    const inputAmount = BigInt(parseUnits("5", tokenInDecimals));
 
     // Call the buildTransaction method in order to build the transaction
     // slippage: The maximum acceptable slippage of the buyAmount amount.
@@ -58,20 +61,25 @@ async function main() {
 
     if (approveResponse === true) {
         try {
-            const feeData = await provider.getFeeData();
-            if (!feeData.gasPrice) {
-                console.log("gasPrice not found");
-                return;
-            }
-            const tx = await contractwwallet.swap(
-                swapCall.route,
-                swapCall.swap_parameters,
-                {
-                    gasPrice: feeData.gasPrice * 2n,
+            // Type guard: EVM chains return EvmTransactionData
+            if ("route" in swapCall && "swap_parameters" in swapCall) {
+                const feeData = await provider.getFeeData();
+                if (!feeData.gasPrice) {
+                    console.log("gasPrice not found");
+                    return;
                 }
-            );
-            await tx.wait();
-            console.log(`https://basescan.org/tx/${tx.hash}`);
+                const tx = await contractwwallet.swap(
+                    swapCall.route,
+                    swapCall.swap_parameters,
+                    {
+                        gasPrice: feeData.gasPrice * 2n,
+                    },
+                );
+                await tx.wait();
+                console.log(`https://basescan.org/tx/${tx.hash}`);
+            } else {
+                console.error("Invalid swap call data for EVM transaction");
+            }
         } catch (e) {
             console.error("Error swapping tokens: ", e);
         }

@@ -23,11 +23,12 @@ pnpm add fibrous-router-sdk
 
 ## Usage
 
-Check out the for [Starknet examples](./examples/src/starknet/) and [Starknet README](./examples/src/starknet/README.md) folder for more detailed examples.
+Check out the [Starknet examples](./examples/src/starknet/) and [Starknet README](./examples/src/starknet/README.md) for more detailed examples.
 
-Check out the for [Scroll examples](./examples/src/scroll/) and [Scroll README](./examples/src/scroll/README.md) folder for more detailed examples.
+Check out the [Scroll examples](./examples/src/scroll/) and [Scroll README](./examples/src/scroll/README.md) for more detailed examples.
 
-Check out the for [Base examples](./examples/src/base/) and [Base README](./examples/src/base/README.md) folder for more detailed examples.
+Check out the [Base examples](./examples/src/base/) and [Base README](./examples/src/base/README.md) for more detailed examples.
+
 ## Contributing
 
 We welcome contributions from the community. Please review our [contributing guidelines](./docs/CONTRIBUTING.md) to get started.

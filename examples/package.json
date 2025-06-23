@@ -1,12 +1,18 @@
 {
   "name": "fibrous-sdk-examples",
-  "version": "0.2.0",
+  "version": "0.5.1",
   "description": "Examples for using Fibrous SDK",
   "main": "index.js",
   "author": "kermo & zetsuboii",
   "license": "MIT",
   "private": false,
+  "scripts": {
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src --ext .ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
   "dependencies": {
-    "fibrous-router-sdk": "^0.4.3"
+    "fibrous-router-sdk": "^0.5.1",
+    "tsx": "^4.20.3"
   }
 }

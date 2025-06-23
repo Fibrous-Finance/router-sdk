@@ -1,6 +1,8 @@
-import { BigNumber } from "@ethersproject/bignumber";
-import { Router as FibrousRouter } from "fibrous-router-sdk";
+// import { Router as FibrousRouter } from "fibrous-router-sdk";
+import { Router as FibrousRouter } from "../../../src";
 import { Call } from "starknet";
+import { parseUnits } from "ethers";
+import "dotenv/config";
 
 import { account } from "./account";
 
@@ -16,20 +18,21 @@ async function main() {
         throw new Error("Missing environment variables");
     }
 
-
     // Get the supported tokens for the Starknet chain
     const tokens = await fibrous.supportedTokens("starknet");
     /**
-     * recommended that use the token address directly 
+     * recommended that use the token address directly
      * because there may be more than one token with the same symbol.
      */
-    const tokenInAddress = tokens.get("eth")?.address;
-    const tokenOutAddress = tokens.get("usdt")?.address;
-    const tokenInDecimals = tokens.get("eth")?.decimals;
+    const ethToken = tokens.get("eth");
+    const usdtToken = tokens.get("usdt");
+    const tokenInAddress = ethToken?.address;
+    const tokenOutAddress = usdtToken?.address;
+    const tokenInDecimals = Number(ethToken?.decimals);
     if (!tokenInAddress || !tokenOutAddress || !tokenInDecimals) {
         throw new Error("Token not found");
     }
-    const inputAmount = BigNumber.from(1n * 10n ** BigInt(tokenInDecimals - 3)); // 0.001 ETH
+    const inputAmount = BigInt(parseUnits("0.001", tokenInDecimals)); // 0.001 ETH
 
     // Call the buildTransaction method in order to build the transaction
     // slippage: The maximum acceptable slippage of the buyAmount amount.
@@ -43,7 +46,6 @@ async function main() {
         "starknet",
     );
 
-
     // https://www.starknetjs.com/docs/guides/connect_account
     // If this account is based on a Cairo v2 contract (for example OpenZeppelin account 0.7.0 or later), do not forget to add the parameter "1" after the privateKey parameter
     const account0 = account(PRIVATE_KEY, PUBLIC_KEY, "1", RPC_URL);
@@ -51,8 +53,14 @@ async function main() {
         inputAmount,
         tokenInAddress,
     );
-    const resp = await account0.execute([approveCall, swapCall]);
-    console.log(`https://starkscan.co/tx/${resp.transaction_hash}`);
+
+    // Type guard: Starknet chains return Call
+    if ("contractAddress" in swapCall && "entrypoint" in swapCall) {
+        const resp = await account0.execute([approveCall, swapCall]);
+        console.log(`https://starkscan.co/tx/${resp.transaction_hash}`);
+    } else {
+        console.error("Invalid swap call data for Starknet transaction");
+    }
 }
 
 main();

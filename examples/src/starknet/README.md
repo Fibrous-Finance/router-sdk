@@ -1,10 +1,10 @@
 <p align="center">
   <a href="https://fibrous.finance">
-    <img src="./docs/assets/logo.png" width="400px" >
+    <img src="../../../docs/assets/logo.png" width="400px" >
   </a>
 </p>
 
-# Fibrous Finance SDK (v0.4.0)
+# Fibrous Finance SDK (v0.5.1)
 
 [Full Documentation](https://docs.fibrous.finance/)
 
@@ -23,22 +23,22 @@ Fetching route
 
 ```javascript
 import { Router as FibrousRouter } from "fibrous-router-sdk";
-import { BigNumber } from "@ethersproject/bignumber";
 import { parseUnits } from "ethers";
 
 const router = new FibrousRouter();
 const chainName = "starknet";
 
+const tokens = await router.supportedTokens(chainName);
 const tokenInAddress = tokens["eth"].address;
 const tokenOutAddress = tokens["usdc"].address;
 const tokenInDecimals = tokens["eth"].decimals;
-const inputAmount = BigNumber.from(1n * 10n ** BigInt(tokenInDecimals));
+const inputAmount = BigInt(parseUnits("1", tokenInDecimals));
 
-const route = await fibrous.getBestRoute(
-    inputAmount, // amount
-    tokenInAddress, // token input
-    tokenOutAddress, // token output
-    chainName,
+const route = await router.getBestRoute(
+  inputAmount, // amount
+  tokenInAddress, // token input
+  tokenOutAddress, // token output
+  chainName,
 );
 // returns route type (src/types/route.ts)
 ```
@@ -49,7 +49,6 @@ Build transaction on Starknet
 import { Router as FibrousRouter } from "fibrous-router-sdk";
 import { connect, disconnect } from '@argent/get-starknet'
 import { Account, Provider } from "starknet";
-import { BigNumber } from "@ethersproject/bignumber";
 import { parseUnits } from "ethers";
 
 const fibrous = new FibrousRouter();
@@ -60,7 +59,7 @@ const tokens = await fibrous.supportedTokens(chainName);
 const tokenInAddress = tokens["eth"].address;
 const tokenOutAddress = tokens["usdc"].address;
 const tokenInDecimals = tokens["eth"].decimals;
-const inputAmount = BigNumber.from(1n * 10n ** BigInt(tokenInDecimals));
+const inputAmount = BigInt(parseUnits("1", tokenInDecimals));
 
 // Usage on your website
 
@@ -107,7 +106,7 @@ if (!DESTINATION || !PRIVATE_KEY || !RPC_URL || !PUBLIC_KEY) {
 
 // https://www.starknetjs.com/docs/guides/connect_account
 // If this account is based on a Cairo v2 contract (for example OpenZeppelin account 0.7.0 or later), do not forget to add the parameter "1" after the privateKey parameter
-const account0 = account(PRIVATE_KEY, PUBLIC_KEY, "1", RPC_URL);
+const account0 = new Account(provider, PUBLIC_KEY, PRIVATE_KEY, "1");
 
 // Call the buildTransaction method in order to build the transaction
 // slippage: The maximum acceptable slippage of the buyAmount amount.
@@ -121,12 +120,12 @@ const swapCall = await fibrous.buildTransaction(
     chainName
 );
 
-const approveCall:Call = await fibrous.buildApprove(
+const approveCall:Call = await fibrous.buildApproveStarknet(
       inputAmount,
       tokenInAddress,
   );
 
-await account.execute([approveCall, swapCall])
+await account0.execute([approveCall, swapCall])
 
 ```
 
@@ -136,7 +135,6 @@ Build Batch transaction on Starknet
 import { Router as FibrousRouter } from "fibrous-router-sdk";
 import { connect, disconnect } from '@argent/get-starknet'
 import { Account, Provider } from "starknet";
-import { BigNumber } from "@ethersproject/bignumber";
 import { parseUnits } from "ethers";
 
 const fibrous = new FibrousRouter();
@@ -155,10 +153,10 @@ const tokenInDecimals_2 = tokens["strk"].decimals;
 const tokenInDecimals_3 = tokens["usdc"].decimals;
 
 const inputAmounts = [
-    BigNumber.from(1n * 10n ** BigInt(tokenInDecimals_1 - 3)), // 0.001 ETH
-    BigNumber.from(10n * 10n ** BigInt(tokenInDecimals_2)), // 0.001 STRK
-    BigNumber.from(5n * 10n ** BigInt(tokenInDecimals_3)), // 5 USDC
-]; // 0.001 ETH
+    BigInt(parseUnits("0.001", tokenInDecimals_1)), // 0.001 ETH
+    BigInt(parseUnits("10", tokenInDecimals_2)), // 10 STRK
+    BigInt(parseUnits("5", tokenInDecimals_3)), // 5 USDC
+];
 
 
 // Usage on your website
@@ -193,19 +191,19 @@ const swapCalls = await fibrous.buildBatchTransaction(
         );
         approveCalls.push(approveCall);
     }
-  await starknet.account.execute([...approveCall,...swapCall]);
+  await starknet.account.execute([...approveCalls,...swapCalls]);
 }
 
 
 // Usage on backend
 
-const provider = new Provider();
 const privateKey0 = "YOUR_PRIVATE_KEY";
-const accountAddress0 = "YOUR_WALLET_ADDRESS";
+const publicKey0 = "YOUR_PUBLIC_KEY";
 // https://www.starknetjs.com/docs/guides/connect_account
 // If this account is based on a Cairo v2 contract (for example OpenZeppelin account 0.7.0 or later), do not forget to add the parameter "1" after the privateKey parameter
 const rpcUrl = "RPC_URL";
-const account0 = account(privateKey, publicKey, "1", rpcUrl);
+const provider = new Provider({ rpc: { nodeUrl: rpcUrl } });
+const account0 = new Account(provider, publicKey0, privateKey0, "1");
 
 // Call the buildTransaction method in order to build the transaction
 // slippage: The maximum acceptable slippage of the buyAmount amount.

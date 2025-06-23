@@ -1,10 +1,10 @@
 <p align="center">
   <a href="https://fibrous.finance">
-    <img src="./docs/assets/logo.png" width="400px" >
+    <img src="../../../docs/assets/logo.png" width="400px" >
   </a>
 </p>
 
-# Fibrous Finance SDK (v0.4.0)
+# Fibrous Finance SDK (v0.5.1)
 
 [Full Documentation](https://docs.fibrous.finance/)
 
@@ -23,28 +23,29 @@ Fetching route
 
 ```javascript
 import { Router as FibrousRouter } from "fibrous-router-sdk";
-import { BigNumber } from "@ethersproject/bignumber";
 import { parseUnits } from "ethers";
 
 const router = new FibrousRouter();
 const chainName = "base";
-const inputToken = await fibrous.getToken(
-    "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2",
-    "base",
+
+const tokens = await router.supportedTokens(chainName);
+const inputToken = await router.getToken(
+  "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2",
+  "base",
 );
 if (!inputToken) {
-    throw new Error("Input token not found");
+  throw new Error("Input token not found");
 }
 const tokenInAddress = inputToken.address;
 const tokenOutAddress = tokens["usdc"].address;
 const tokenInDecimals = Number(inputToken.decimals);
-const inputAmount = BigNumber.from(parseUnits("5", tokenInDecimals));
+const inputAmount = BigInt(parseUnits("5", tokenInDecimals));
 
-const route = await fibrous.getBestRoute(
-    inputAmount, // amount
-    tokenInAddress, // token input
-    tokenOutAddress, // token output
-    chainName,
+const route = await router.getBestRoute(
+  inputAmount, // amount
+  tokenInAddress, // token input
+  tokenOutAddress, // token output
+  chainName,
 );
 // returns route type (src/types/route.ts)
 ```
@@ -52,7 +53,6 @@ const route = await fibrous.getBestRoute(
 Build transaction on Base
 
 ```javascript
-import { BigNumber } from "@ethersproject/bignumber";
 import { Router as FibrousRouter } from "fibrous-router-sdk";
 import { parseUnits } from "ethers";
 import { account } from "./account";
@@ -76,56 +76,56 @@ const provider = new ethers.JsonRpcProvider(RPC_URL);
 // Build route options
 const tokens = await fibrous.supportedTokens(chainName);
 const inputToken = await fibrous.getToken(
-    "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2",
-    "base",
+  "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2",
+  "base",
 );
 if (!inputToken) {
-    throw new Error("Input token not found");
+  throw new Error("Input token not found");
 }
 const tokenInAddress = inputToken.address;
 const tokenOutAddress = tokens["usdc"].address;
 const tokenInDecimals = Number(inputToken.decimals);
-const inputAmount = BigNumber.from(parseUnits("5", tokenInDecimals));
+const inputAmount = BigInt(parseUnits("5", tokenInDecimals));
 
 // Call the buildTransaction method in order to build the transaction
 // slippage: The maximum acceptable slippage of the buyAmount amount.
 const slippage = 1;
 const swapCall = await fibrous.buildTransaction(
-    inputAmount,
-    tokenInAddress,
-    tokenOutAddress,
-    slippage,
-    destination,
-    chainName,
+  inputAmount,
+  tokenInAddress,
+  tokenOutAddress,
+  slippage,
+  destination,
+  chainName,
 );
 
 const approveResponse = await fibrous.buildApproveEVM(
-    inputAmount,
-    tokenInAddress,
-    account0,
-    chainName,
+  inputAmount,
+  tokenInAddress,
+  account0,
+  chainName,
 );
 if (approveResponse === true) {
-    try {
-        const feeData = await provider.getFeeData();
-        if (!feeData.gasPrice) {
-            console.log("gasPrice not found");
-            return;
-        }
-        const tx = await contractwwallet.swap(
-            swapCall.route,
-            swapCall.swap_parameters,
-            {
-                gasPrice: feeData.gasPrice * 2n,
-            },
-        );
-        await tx.wait();
-        console.log(`https://basescan.org/tx/${tx.hash}`);
-    } catch (e) {
-        console.error("Error swapping tokens: ", e);
+  try {
+    const feeData = await provider.getFeeData();
+    if (!feeData.gasPrice) {
+      console.log("gasPrice not found");
+      return;
     }
+    const tx = await contractwwallet.swap(
+      swapCall.route,
+      swapCall.swap_parameters,
+      {
+        gasPrice: feeData.gasPrice * 2n,
+      },
+    );
+    await tx.wait();
+    console.log(`https://basescan.org/tx/${tx.hash}`);
+  } catch (e) {
+    console.error("Error swapping tokens: ", e);
+  }
 } else {
-    console.error("Error approving tokens");
+  console.error("Error approving tokens");
 }
 ```
 
