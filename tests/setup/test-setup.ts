@@ -244,6 +244,7 @@ export const resetAllMocks = () => {
 
 // Extend Jest matchers for token validation
 declare global {
+    // eslint-disable-next-line @typescript-eslint/no-namespace
     namespace jest {
         interface Matchers<R> {
             toHaveValidTokenFormat(): R;

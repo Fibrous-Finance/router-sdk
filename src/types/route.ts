@@ -94,7 +94,7 @@ export type TransactionConfig = {
     accountAddress: string;
 };
 
-export interface EvmRouteParam {
+export type EvmRouteParam = {
     token_in: string;
     token_out: string;
     amount_in: string;
@@ -102,9 +102,9 @@ export interface EvmRouteParam {
     min_received: string;
     destination: string;
     swap_type: number;
-}
+};
 
-export interface EvmSwapParam {
+export type EvmSwapParam = {
     token_in: string;
     token_out: string;
     rate: number;
@@ -112,9 +112,9 @@ export interface EvmSwapParam {
     pool_address: string;
     swap_type: number;
     extra_data: string | string[];
-}
+};
 
-export interface EvmTransactionData {
+export type EvmTransactionData = {
     route: EvmRouteParam;
     swap_parameters: EvmSwapParam[];
-}
+};

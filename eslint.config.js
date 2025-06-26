@@ -23,6 +23,7 @@ export default tseslint.config(
     js.configs.recommended,
 
     // TypeScript files - minimal and flexible approach
+    ...tseslint.configs.recommended,
     {
         files: ["**/*.ts", "**/*.tsx"],
         languageOptions: {
@@ -37,7 +38,7 @@ export default tseslint.config(
             // Only essential rules - very permissive
             "@typescript-eslint/no-unused-vars": "off", // Allow unused vars
             "@typescript-eslint/explicit-function-return-type": "off",
-            "@typescript-eslint/no-explicit-any": "off", // Allow any type
+            "@typescript-eslint/no-explicit-any": "warn", // Warn about any type usage
             "@typescript-eslint/no-unsafe-assignment": "off",
             "@typescript-eslint/no-unsafe-member-access": "off",
             "@typescript-eslint/no-unsafe-call": "off",
@@ -76,7 +77,7 @@ export default tseslint.config(
         rules: {
             // Turn off everything for examples
             "@typescript-eslint/no-unused-vars": "off",
-            "@typescript-eslint/no-explicit-any": "off",
+            "@typescript-eslint/no-explicit-any": "warn",
             "@typescript-eslint/no-unsafe-assignment": "off",
             "@typescript-eslint/no-unsafe-member-access": "off",
             "@typescript-eslint/no-unsafe-call": "off",
@@ -93,7 +94,7 @@ export default tseslint.config(
         files: ["tests/**/*.ts", "**/*.test.ts", "**/*.spec.ts"],
         rules: {
             // Turn off everything for tests
-            "@typescript-eslint/no-explicit-any": "off",
+            "@typescript-eslint/no-explicit-any": "warn",
             "@typescript-eslint/no-unused-vars": "off",
             "@typescript-eslint/no-unsafe-assignment": "off",
             "@typescript-eslint/no-unsafe-member-access": "off",

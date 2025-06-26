@@ -13,7 +13,6 @@ import {
     RouteExecuteParams,
     RouteExecuteBatchParams,
     RouteParamsBatch,
-    EvmTransactionData,
 } from "../types";
 import { fibrousRouterABI, erc20ABI, baseRouterAbi } from "../abis";
 import { ethers, Wallet } from "ethers";
@@ -63,17 +62,14 @@ export class Router {
         };
 
         // Add optional parameters
-        if (options) {
-            if (options.excludeProtocols) {
-                routeParams.excludeProtocols =
-                    options.excludeProtocols.join(",");
+        for (const [key, value] of Object.entries(options ?? {})) {
+            if (key == "excludeProtocols") {
+                routeParams.excludeProtocols = (value as ProtocolId[]).join(
+                    ",",
+                );
+                continue;
             }
-            if (options.direct) {
-                routeParams.direct = options.direct;
-            }
-            if (options.reverse) {
-                routeParams.reverse = options.reverse;
-            }
+            routeParams[key as any] = value;
         }
 
         const routeUrl = buildRouteUrl(
@@ -98,17 +94,13 @@ export class Router {
             tokenOutAddresses,
         };
 
-        if (options) {
-            if (options.excludeProtocols) {
-                routeParams.excludeProtocols =
-                    options.excludeProtocols.join(",");
+        for (const [key, value] of Object.entries(options ?? {})) {
+            if (key == "excludeProtocols") {
+                routeParams.excludeProtocols = (value as ProtocolId[]).join(
+                    ",",
+                );
             }
-            if (options.direct) {
-                routeParams.direct = options.direct;
-            }
-            if (options.reverse) {
-                routeParams.reverse = options.reverse;
-            }
+            routeParams[key as any] = value;
         }
 
         const routeUrl = buildRouteUrlBatch(
@@ -270,7 +262,7 @@ export class Router {
         destination: string,
         chainName: string,
         options?: Partial<RouteOverrides>,
-    ): Promise<Call | EvmTransactionData> {
+    ): Promise<Call | any> {
         const amount = "0x" + inputAmount.toString(16);
         const routeParams: RouteExecuteParams = {
             amount,
@@ -280,17 +272,15 @@ export class Router {
             destination,
         };
 
-        if (options) {
-            if (options.excludeProtocols) {
-                routeParams.excludeProtocols =
-                    options.excludeProtocols.join(",");
+        // Add optional parameters
+        for (const [key, value] of Object.entries(options ?? {})) {
+            if (key == "excludeProtocols") {
+                routeParams.excludeProtocols = (value as ProtocolId[]).join(
+                    ",",
+                );
+                continue;
             }
-            if (options.direct) {
-                routeParams.direct = options.direct;
-            }
-            if (options.reverse) {
-                routeParams.reverse = options.reverse;
-            }
+            routeParams[key as any] = value;
         }
 
         const routeUrl = buildRouteUrl(
@@ -299,7 +289,7 @@ export class Router {
         );
         const route = await fetch(routeUrl, {
             headers: buildHeaders(this.apiKey),
-        }).then((response) => response.json() as Promise<RouteResponse>);
+        }).then((response) => response.json());
         const calldataParams = {
             route_response: route,
             signer: destination,
@@ -318,10 +308,10 @@ export class Router {
             return {
                 contractAddress: this.STARKNET_ROUTER_ADDRESS,
                 entrypoint: "swap",
-                calldata: calldata as string[],
+                calldata: calldata,
             };
         } else if (chainName == "scroll" || chainName == "base") {
-            return calldata as EvmTransactionData;
+            return calldata;
         } else {
             throw new Error("Invalid chain ID");
         }
@@ -341,7 +331,7 @@ export class Router {
         destination: string,
         chainName: string,
         options?: Partial<RouteOverrides>,
-    ): Promise<Call[] | EvmTransactionData> {
+    ): Promise<Call[] | any> {
         const amounts = inputAmounts.map(
             (amount) => "0x" + amount.toString(16),
         );
@@ -353,17 +343,15 @@ export class Router {
             destination,
         };
 
-        if (options) {
-            if (options.excludeProtocols) {
-                routeParams.excludeProtocols =
-                    options.excludeProtocols.join(",");
+        // Add optional parameters
+        for (const [key, value] of Object.entries(options ?? {})) {
+            if (key == "excludeProtocols") {
+                routeParams.excludeProtocols = (value as ProtocolId[]).join(
+                    ",",
+                );
+                continue;
             }
-            if (options.direct) {
-                routeParams.direct = options.direct;
-            }
-            if (options.reverse) {
-                routeParams.reverse = options.reverse;
-            }
+            routeParams[key as any] = value;
         }
 
         const routeUrl = buildRouteUrl(
@@ -375,7 +363,7 @@ export class Router {
         }).then((response) => response.json());
 
         if (chainName == "starknet") {
-            const swapCalls = (calldata as string[][]).map((call: string[]) => {
+            const swapCalls = calldata.map((call: any) => {
                 return {
                     contractAddress: this.STARKNET_ROUTER_ADDRESS,
                     entrypoint: "swap",
@@ -384,7 +372,7 @@ export class Router {
             });
             return swapCalls;
         } else {
-            return calldata as EvmTransactionData;
+            throw new Error("Invalid chain ID");
         }
     }
 
