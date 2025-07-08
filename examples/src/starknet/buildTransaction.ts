@@ -2,6 +2,7 @@
 import { Router as FibrousRouter } from "../../../src";
 import { Call } from "starknet";
 import { parseUnits } from "ethers";
+
 import "dotenv/config";
 
 import { account } from "./account";
@@ -24,15 +25,29 @@ async function main() {
      * recommended that use the token address directly
      * because there may be more than one token with the same symbol.
      */
-    const ethToken = tokens.get("eth");
-    const usdtToken = tokens.get("usdt");
-    const tokenInAddress = ethToken?.address;
-    const tokenOutAddress = usdtToken?.address;
-    const tokenInDecimals = Number(ethToken?.decimals);
+    const inputToken = await fibrous.getToken(
+        "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7", // ETH address
+        "starknet",
+    );
+    if (!inputToken) {
+        throw new Error("Input token not found");
+    }
+    const outputToken = tokens.get("strk"); // this search in only the tokens that are verified
+        // if you want to search for a token that is not verified, you can use the getToken method
+        // const outputToken = await fibrous.getToken(
+        //     "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d", // STRK address
+        //     "starknet",
+        // );
+        if (!outputToken) {
+            throw new Error("Output token not found");
+        }
+    const tokenInAddress = inputToken.address;
+    const tokenOutAddress = outputToken.address;
+    const tokenInDecimals = Number(inputToken?.decimals);
     if (!tokenInAddress || !tokenOutAddress || !tokenInDecimals) {
         throw new Error("Token not found");
     }
-    const inputAmount = BigInt(parseUnits("0.001", tokenInDecimals)); // 0.001 ETH
+    const inputAmount = BigInt(parseUnits("0.0001", tokenInDecimals)); // 0.0001 ETH
 
     // Call the buildTransaction method in order to build the transaction
     // slippage: The maximum acceptable slippage of the buyAmount amount.

@@ -13,10 +13,11 @@ import {
     RouteExecuteParams,
     RouteExecuteBatchParams,
     RouteParamsBatch,
+    AmountType,
 } from "../types";
 import { fibrousRouterABI, erc20ABI, baseRouterAbi } from "../abis";
 import { ethers, Wallet } from "ethers";
-import { Call } from "starknet";
+import { BigNumberish, Call } from "starknet";
 
 export class Router {
     readonly DEFAULT_API_URL = "https://api.fibrous.finance";
@@ -48,7 +49,7 @@ export class Router {
      * @throws Error if the API returns an error
      */
     async getBestRoute(
-        amount: bigint,
+        amount: AmountType,
         tokenInAddress: string,
         tokenOutAddress: string,
         chainName: string,
@@ -82,7 +83,7 @@ export class Router {
     }
 
     async getBestRouteBatch(
-        amounts: bigint[],
+        amounts: bigint[] | string[] | number[] | BigNumberish[],
         tokenInAddresses: string[],
         tokenOutAddresses: string[],
         chainName: string,
@@ -180,7 +181,7 @@ export class Router {
      * @param tokenAddress: Token to approve
      */
     async buildApproveStarknet(
-        amount: bigint,
+        amount: AmountType,
         tokenAddress: string,
     ): Promise<Call> {
         const amountHex = "0x" + amount.toString(16);
@@ -200,7 +201,7 @@ export class Router {
      * @param chainName: Chain ID to get the router address for
      */
     async buildApproveEVM(
-        amount: bigint,
+        amount: AmountType,
         tokenAddress: string,
         account: Wallet,
         chainName: string,
@@ -255,7 +256,7 @@ export class Router {
      * @param receiverAddress: Address to receive the tokens
      */
     async buildTransaction(
-        inputAmount: bigint,
+        inputAmount: AmountType,
         tokenInAddress: string,
         tokenOutAddress: string,
         slippage: number,
@@ -263,7 +264,7 @@ export class Router {
         chainName: string,
         options?: Partial<RouteOverrides>,
     ): Promise<Call | any> {
-        const amount = "0x" + inputAmount.toString(16);
+        const amount = inputAmount.toString();
         const routeParams: RouteExecuteParams = {
             amount,
             tokenInAddress,
@@ -324,7 +325,7 @@ export class Router {
      * @param receiverAddress: Address to receive the tokens
      */
     async buildBatchTransaction(
-        inputAmounts: bigint[],
+        inputAmounts: AmountType[],
         tokenInAddresses: string[],
         tokenOutAddresses: string[],
         slippage: number,
@@ -332,9 +333,7 @@ export class Router {
         chainName: string,
         options?: Partial<RouteOverrides>,
     ): Promise<Call[] | any> {
-        const amounts = inputAmounts.map(
-            (amount) => "0x" + amount.toString(16),
-        );
+        const amounts = inputAmounts.map((amount) => amount.toString());
         const routeParams: RouteExecuteBatchParams = {
             amounts,
             tokenInAddresses,

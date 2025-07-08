@@ -25,20 +25,25 @@ async function main() {
     // Build route options
     const tokens = await fibrous.supportedTokens("base");
     const inputToken = await fibrous.getToken(
-        "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2",
+        "0x0000000000000000000000000000000000000000",
         "base",
     );
     if (!inputToken) {
         throw new Error("Input token not found");
     }
     const tokenInAddress = inputToken.address;
-    const usdcToken = tokens.get("usdc");
-    if (!usdcToken) {
-        throw new Error("USDC token not found");
+    const outputToken = tokens.get("usdc");
+    // if you want to search for a token that is not verified, you can use the getToken method
+    // const outputToken = await fibrous.getToken(
+    //     "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913", // USDC address
+    //     "base",
+    // );
+    if (!outputToken) {
+        throw new Error("Output token not found");
     }
-    const tokenOutAddress = usdcToken.address;
+    const tokenOutAddress = outputToken.address;
     const tokenInDecimals = Number(inputToken.decimals);
-    const inputAmount = BigInt(parseUnits("5", tokenInDecimals));
+    const inputAmount = BigInt(parseUnits("0.01", tokenInDecimals)); // 0.01 ETH
 
     // Call the buildTransaction method in order to build the transaction
     // slippage: The maximum acceptable slippage of the buyAmount amount.

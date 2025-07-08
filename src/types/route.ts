@@ -1,5 +1,6 @@
 import { Token } from "./token";
 import { ProtocolId } from "./enums";
+import { BigNumberish } from "starknet";
 
 export type Percent = `${string}%`;
 
@@ -10,7 +11,7 @@ export type RouteOverrides = {
 };
 
 export type RouteParams = {
-    amount: bigint;
+    amount: AmountType;
     tokenInAddress: string;
     tokenOutAddress: string;
 } & Partial<
@@ -18,7 +19,7 @@ export type RouteParams = {
 >;
 
 export type RouteExecuteParams = {
-    amount: string;
+    amount: AmountType;
     tokenInAddress: string;
     tokenOutAddress: string;
     slippage: number;
@@ -28,7 +29,7 @@ export type RouteExecuteParams = {
 >;
 
 export type RouteParamsBatch = {
-    amounts: bigint[];
+    amounts: AmountType[];
     tokenInAddresses: string[];
     tokenOutAddresses: string[];
 } & Partial<
@@ -36,7 +37,7 @@ export type RouteParamsBatch = {
 >;
 
 export type RouteExecuteBatchParams = {
-    amounts: string[];
+    amounts: AmountType[];
     tokenInAddresses: string[];
     tokenOutAddresses: string[];
     slippage: number;
@@ -118,3 +119,5 @@ export type EvmTransactionData = {
     route: EvmRouteParam;
     swap_parameters: EvmSwapParam[];
 };
+
+export type AmountType = bigint | string | number | BigNumberish;

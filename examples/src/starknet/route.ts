@@ -9,7 +9,7 @@ async function main() {
     // Build route options
     const tokens = await fibrous.supportedTokens(chainName);
     const inputToken = await fibrous.getToken(
-        "0x068f5c6a61780768455de69077e07e89787839bf8166decfbf92b645209c0fb8",
+        "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7", // ETH address
         "starknet",
     );
     if (!inputToken) {
@@ -17,15 +17,20 @@ async function main() {
     }
     try {
         const tokenInAddress = inputToken.address;
-        const usdcToken = tokens.get("usdc");
-        if (!usdcToken) {
-            throw new Error("USDC token not found");
+        const outputToken = tokens.get("strk"); // this search in only the tokens that are verified
+        // if you want to search for a token that is not verified, you can use the getToken method
+        // const outputToken = await fibrous.getToken(
+        //     "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d", // STRK address
+        //     "starknet",
+        // );
+        if (!outputToken) {
+            throw new Error("Output token not found");
         }
-        const tokenOutAddress = usdcToken.address;
+        const tokenOutAddress = outputToken.address;
         const tokenInDecimals = Number(inputToken.decimals);
-        const inputAmount = BigInt(parseUnits("0.1", tokenInDecimals)); // 0.1 ETH
+        const inputAmount = BigInt(parseUnits("0.01", tokenInDecimals)); // 0.01 ETH
         const reverse = false;
-        // Converting 1 ETH to USDC
+        // Converting 1 ETH to STRK
         const route = await fibrous.getBestRoute(
             inputAmount,
             tokenInAddress,

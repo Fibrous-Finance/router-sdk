@@ -11,7 +11,12 @@ async function main() {
      * recommended that use the token address directly
      * because there may be more than one token with the same symbol.
      */
-    const ethToken = tokens.get("eth");
+    const ethToken = tokens.get("eth"); // this search in only the tokens that are verified
+    // if you want to search for a token that is not verified, you can use the getToken method
+    // const ethToken = await fibrous.getToken(
+    //     "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7", // ETH address
+    //     "starknet",
+    // );
     const strkToken = tokens.get("strk");
     const usdcToken = tokens.get("usdc");
     const usdtToken = tokens.get("usdt");
