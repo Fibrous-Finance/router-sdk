@@ -3,6 +3,7 @@ import { Router as FibrousRouter } from "fibrous-router-sdk";
 import { ethers, parseUnits } from "ethers";
 import { account } from "./account";
 import { config } from "dotenv";
+import { swap_types } from "../types";
 config();
 // RPC URL for the Scroll network, you can change this to the RPC URL of your choice
 const RPC_URL = process.env.SCROLL_RPC_URL;
@@ -65,11 +66,17 @@ async function main() {
                 console.log("gasPrice not found");
                 return;
             }
+            const routeType = swapCall.route.route_type;
+            let isEth = false;
+            if (routeType == swap_types.ethToToken) {
+                isEth = true;
+            }
             const tx = await contractwwallet.swap(
                 swapCall.route,
                 swapCall.swap_parameters,
                 {
                     gasPrice: feeData.gasPrice * 2n,
+                    value: isEth ? inputAmount : 0n,
                 }
             );
             await tx.wait();
