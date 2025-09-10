@@ -8,9 +8,12 @@ import { account } from "./account";
 async function main() {
     // Create a new router instance
     const fibrous = new FibrousRouter();
-
+    const chainId = fibrous.supportedChains.find(chain => chain.chain_name == "starknet")?.chain_id;
+    if (!chainId) {
+        throw new Error("Chain not supported");
+    }
     // Get the supported tokens for the Starknet chain
-    const tokens = await fibrous.supportedTokens("starknet");
+    const tokens = await fibrous.supportedTokens(chainId);
 
     const ethToken = tokens.get("eth");
     const strkToken = tokens.get("strk");
@@ -58,7 +61,9 @@ async function main() {
         tokenOutAddresses,
         slippage,
         destination,
-        "starknet",
+        "starknet", // chainName will be deprecated in the future, use chainId instead
+        {reverse: false, direct: false, excludeProtocols: []},
+        chainId,
     );
 
     // https://www.starknetjs.com/docs/guides/connect_account
@@ -81,7 +86,7 @@ async function main() {
         )
     ) {
         const resp = await account0.execute([...approveCalls, ...swapCalls]);
-        console.log(`https://starkscan.co/tx/${resp.transaction_hash}`);
+        console.log(`https://voyager.online/tx/${resp.transaction_hash}`);
     } else {
         console.error("Invalid swap call data for Starknet batch transaction");
     }

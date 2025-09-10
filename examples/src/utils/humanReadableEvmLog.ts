@@ -9,10 +9,10 @@ import { formatUnits } from "ethers";
  * @param outputToken - The output token information
  * @param protocols - Protocol mapping for readable names
  */
-export function humanReadableSwapCallDataLog(
+export function humanReadableEvmSwapCallDataLog(
     callData: EvmTransactionData,
-    inputToken: Token,
-    outputToken: Token,
+    inputToken: any,
+    outputToken: any,
     protocols: Record<string, number>,
 ): void {
     console.log("\n" + "=".repeat(60));
@@ -24,7 +24,12 @@ export function humanReadableSwapCallDataLog(
     console.log("\n📋 Route Information:");
     console.log(`  Token In:      ${inputToken.symbol}`);
     console.log(`  Token Out:     ${outputToken.symbol}`);
-    console.log(`  Amount In:     ${formatAmount(route.amount_in, inputToken.decimals)} ${inputToken.symbol}`);
+    console.log(
+        `  Amount In:     ${formatAmount(
+            route.amount_in,
+            inputToken.decimals,
+        )} ${inputToken.symbol}`,
+    );
     console.log(
         `  Amount Out:    ${formatAmount(
             route.amount_out,

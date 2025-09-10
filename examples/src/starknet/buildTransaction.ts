@@ -6,28 +6,32 @@ import { parseUnits } from "ethers";
 import "dotenv/config";
 
 import { account } from "./account";
+import { humanReadableStarknetSwapCallDataLog } from "../utils/humanReadableStarknetLog";
 
+const PUBLIC_KEY = process.env.STARKNET_PUBLIC_KEY;
+const PRIVATE_KEY = process.env.STARKNET_PRIVATE_KEY;
+const RPC_URL = process.env.STARKNET_RPC_URL;
+const DESTINATION = process.env.STARKNET_PUBLIC_KEY; // The address to receive the tokens after the swap is completed (required)
 async function main() {
     // Create a new router instance
     const fibrous = new FibrousRouter();
-
-    const PUBLIC_KEY = process.env.STARKNET_PUBLIC_KEY;
-    const PRIVATE_KEY = process.env.STARKNET_PRIVATE_KEY;
-    const RPC_URL = process.env.STARKNET_RPC_URL;
-    const DESTINATION = process.env.STARKNET_PUBLIC_KEY; // The address to receive the tokens after the swap is completed (required)
+    const chainId = fibrous.supportedChains.find(chain => chain.chain_name == "starknet")?.chain_id;
+    if (!chainId) {
+        throw new Error("Chain not supported");
+    }
     if (!DESTINATION || !PRIVATE_KEY || !RPC_URL || !PUBLIC_KEY) {
         throw new Error("Missing environment variables");
     }
 
     // Get the supported tokens for the Starknet chain
-    const tokens = await fibrous.supportedTokens("starknet");
+    const tokens = await fibrous.supportedTokens(chainId);
     /**
      * recommended that use the token address directly
      * because there may be more than one token with the same symbol.
      */
     const inputToken = await fibrous.getToken(
         "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7", // ETH address
-        "starknet",
+        chainId,
     );
     if (!inputToken) {
         throw new Error("Input token not found");
@@ -58,7 +62,13 @@ async function main() {
         tokenOutAddress,
         slippage,
         DESTINATION,
-        "starknet",
+        "starknet", // chainName will be deprecated in the future, use chainId instead
+        {
+            reverse: false,
+            direct: false,
+            excludeProtocols: [],
+        },
+        chainId,
     );
 
     // https://www.starknetjs.com/docs/guides/connect_account
@@ -68,11 +78,17 @@ async function main() {
         inputAmount,
         tokenInAddress,
     );
+    humanReadableStarknetSwapCallDataLog(
+        swapCall,
+        inputToken,
+        outputToken,
+        await fibrous.supportedProtocols(chainId),
+    );
 
     // Type guard: Starknet chains return Call
     if ("contractAddress" in swapCall && "entrypoint" in swapCall) {
         const resp = await account0.execute([approveCall, swapCall]);
-        console.log(`https://starkscan.co/tx/${resp.transaction_hash}`);
+        console.log(`https://voyager.online/tx/${resp.transaction_hash}`);
     } else {
         console.error("Invalid swap call data for Starknet transaction");
     }

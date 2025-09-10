@@ -5,13 +5,14 @@ import { Router as FibrousRouter } from "../../../src";
 async function main() {
     // Create a new router instance
     const router = new FibrousRouter();
-
-    try {
-        const protocols = await router.supportedProtocols("starknet");
-        console.log(protocols);
-    } catch (error) {
-        console.error(error);
+    const chainId = router.supportedChains.find(chain => chain.chain_name == "starknet")?.chain_id;
+    if (!chainId) {
+        throw new Error("Chain not supported");
     }
+
+    const protocols = await router.supportedProtocols(chainId);
+    console.log(protocols);
+
 }
 
 main();

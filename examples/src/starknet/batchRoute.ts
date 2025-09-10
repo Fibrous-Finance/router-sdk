@@ -4,9 +4,12 @@ import { parseUnits } from "ethers";
 async function main() {
     // Create a new router instance
     const fibrous = new FibrousRouter();
-
+    const chainId = fibrous.supportedChains.find(chain => chain.chain_name == "starknet")?.chain_id;
+    if (!chainId) {
+        throw new Error("Chain not supported");
+    }
     // Get the supported tokens for the Starknet chain
-    const tokens = await fibrous.supportedTokens("starknet");
+    const tokens = await fibrous.supportedTokens(chainId);
     /**
      * recommended that use the token address directly
      * because there may be more than one token with the same symbol.
@@ -60,7 +63,8 @@ async function main() {
         inputAmounts,
         tokenInAddresses,
         tokenOutAddresses,
-        "starknet",
+        "starknet", 
+        {reverse: false, direct: false, excludeProtocols: []},
     );
 
     console.log(swapCalls);
