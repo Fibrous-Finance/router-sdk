@@ -27,7 +27,7 @@ export class Router {
     readonly SCROLL_ROUTER_ADDRESS =
         "0x4bb92d3f730d5a7976707570228f5cb7e09094c5";
     readonly BASE_ROUTER_ADDRESS = "0x274602a953847d807231d2370072F5f4E4594B44";
-
+    readonly NATIVE_TOKEN_ADDRESS = "0x0000000000000000000000000000000000000000";
     private readonly apiUrl: string;
     private readonly apiKey: string | null;
 
@@ -206,6 +206,9 @@ export class Router {
         account: Wallet,
         chainName: string,
     ): Promise<boolean> {
+        if (tokenAddress == this.NATIVE_TOKEN_ADDRESS) {
+            return true;
+        }
         if (chainName == "scroll") {
             const tokenContract = new ethers.Contract(
                 tokenAddress,

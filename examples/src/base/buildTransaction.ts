@@ -3,6 +3,7 @@ import { Router as FibrousRouter } from "../../../src";
 import { ethers, parseUnits } from "ethers";
 import "dotenv/config";
 import { account } from "./account";
+import { humanReadableSwapCallDataLog } from "../utils/humanReadableLog";
 
 // RPC URL for the Base network, you can change this to the RPC URL of your choice
 const RPC_URL = process.env.BASE_RPC_URL;
@@ -19,20 +20,21 @@ async function main() {
     }
     // Create a new contract instance
     const account0 = account(privateKey, RPC_URL);
-    const contractwwallet = await fibrous.getContractWAccount(account0, "base");
+    const contractWallet = await fibrous.getContractWAccount(account0, "base");
     const provider = new ethers.JsonRpcProvider(RPC_URL);
 
     // Build route options
     const tokens = await fibrous.supportedTokens("base");
-    const inputToken = await fibrous.getToken(
-        "0x0000000000000000000000000000000000000000",
-        "base",
-    );
+    // const inputToken = await fibrous.getToken(
+    //     "0x0000000000000000000000000000000000000000",
+    //     "base",
+    // );
+    const inputToken = tokens.get("usdc");
     if (!inputToken) {
         throw new Error("Input token not found");
     }
     const tokenInAddress = inputToken.address;
-    const outputToken = tokens.get("usdc");
+    const outputToken = tokens.get("eth");
     // if you want to search for a token that is not verified, you can use the getToken method
     // const outputToken = await fibrous.getToken(
     //     "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913", // USDC address
@@ -43,8 +45,8 @@ async function main() {
     }
     const tokenOutAddress = outputToken.address;
     const tokenInDecimals = Number(inputToken.decimals);
-    const inputAmount = BigInt(parseUnits("0.01", tokenInDecimals)); // 0.01 ETH
-
+    const inputAmount = BigInt(parseUnits("5", tokenInDecimals)); // 0.01 ETH
+    const isNativeToken = tokenInAddress == "0x0000000000000000000000000000000000000000";
     // Call the buildTransaction method in order to build the transaction
     // slippage: The maximum acceptable slippage of the buyAmount amount.
     const slippage = 1;
@@ -63,7 +65,10 @@ async function main() {
         account0,
         "base",
     );
-
+    humanReadableSwapCallDataLog(swapCall,
+        inputToken,
+        outputToken,
+        await fibrous.supportedProtocols("base"))
     if (approveResponse === true) {
         try {
             // Type guard: EVM chains return EvmTransactionData
@@ -73,15 +78,28 @@ async function main() {
                     console.log("gasPrice not found");
                     return;
                 }
-                const tx = await contractwwallet.swap(
-                    swapCall.route,
-                    swapCall.swap_parameters,
-                    {
-                        gasPrice: feeData.gasPrice * 2n,
-                    },
-                );
+                let tx;
+                if (isNativeToken) {
+                    tx = await contractWallet.swap(
+                        swapCall.route,
+                        swapCall.swap_parameters,
+                        {
+                            gasPrice: feeData.gasPrice * 4n,
+                        },
+                    );
+                } else {
+                    tx = await contractWallet.swap(
+                        swapCall.route,
+                        swapCall.swap_parameters,
+                        {
+                            gasPrice: feeData.gasPrice * 4n,
+                            value: inputAmount,
+                        },
+                    );
+                }
                 await tx.wait();
-                console.log(`https://basescan.org/tx/${tx.hash}`);
+                console.log(`Tx Hash: ${tx.hash}
+Link: https://basescan.org/tx/${tx.hash}`);
             } else {
                 console.error("Invalid swap call data for EVM transaction");
             }
