@@ -19,7 +19,7 @@ import { fibrousRouterABI, erc20ABI, baseRouterAbi } from "../abis";
 import { ethers, Wallet } from "ethers";
 import { BigNumberish, Call } from "starknet";
 import { CHAIN_MAP } from "../types/";
-import { CHAIN_ID_MAP } from "../contants";
+import { CHAIN_ID_MAP } from "../constants";
 
 export class Router {
     readonly DEFAULT_API_URL = "https://api.fibrous.finance";
