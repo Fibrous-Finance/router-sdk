@@ -1,7 +1,5 @@
-import { Token } from "fibrous-router-sdk";
-import { EvmTransactionData } from "../../../src/types";
 import { formatUnits } from "ethers";
-import { CallData, uint256 } from "starknet";
+import { uint256 } from "starknet";
 
 /**
  * Logs swap call data in a human-readable format
