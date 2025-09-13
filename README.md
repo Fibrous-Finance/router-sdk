@@ -35,9 +35,8 @@ If you're upgrading from v0.5.x, please review our [Migration Guide](./docs/MIGR
 
 Check out the [Starknet examples](./examples/src/starknet/) and [Starknet README](./examples/src/starknet/README.md) for more detailed examples.
 
-Check out the [Scroll examples](./examples/src/scroll/) and [Scroll README](./examples/src/scroll/README.md) for more detailed examples.
+Check out the [Evm examples](./examples/src/evm/) and [Evm README](./examples/src/evm/README.md) for more detailed examples.
 
-Check out the [Base examples](./examples/src/base/) and [Base README](./examples/src/base/README.md) for more detailed examples.
 
 ## Contributing
 
