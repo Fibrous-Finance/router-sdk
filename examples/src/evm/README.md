@@ -20,15 +20,32 @@ Fetching Tokens
 ```javascript
 import { Router as FibrousRouter } from "fibrous-router-sdk";
 
-const router = new FibrousRouter();
-
-const chainId = router.supportedChains.find(chain => chain.chain_name === "base")?.chain_id;
-if (!chainId) {
-    throw new Error("Chain not supported");
+// Example of getting a list of tokens
+async function main() {
+    // Create a new router instance
+    const router = new FibrousRouter();
+    const chainId = router.supportedChains.find(chain => chain.chain_name == "base")?.chain_id;
+    if (!chainId) {
+        throw new Error("Chain not supported");
+    }
+    try {
+        // returns verifed tokens
+        const tokens = await router.supportedTokens(chainId); // returns Map<string, Token>
+        console.log("Tokens: ", tokens);
+        // Get a specific token by address
+        const token = await router.getToken(
+            "0x0000000000000000000000000000000000000000",
+            chainId,
+        );
+        console.log("Token: ", token);
+    } catch (error) {
+        console.error(error);
+    }
 }
 
-const tokens = await router.supportedTokens(chainId); // returns Map<string, Token>
-// Access tokens like: tokens.get("usdc") or tokens.get("eth")
+main().catch((e) => {
+    console.error("Error: ", e);
+});
 ```
 
 Fetching route
@@ -37,138 +54,169 @@ Fetching route
 import { Router as FibrousRouter } from "fibrous-router-sdk";
 import { parseUnits } from "ethers";
 
-const router = new FibrousRouter();
-
-const chainId = router.supportedChains.find(chain => chain.chain_name === "base")?.chain_id;
-if (!chainId) {
-    throw new Error("Chain not supported");
+async function main() {
+    // Create a new router instance
+    const fibrous = new FibrousRouter();
+    const chainId = fibrous.supportedChains.find(chain => chain.chain_name == "hyperevm")?.chain_id;
+    if (!chainId) {
+        throw new Error("Chain not supported");
+    }
+    
+    // Build route options
+    const tokens = await fibrous.supportedTokens(chainId);
+    // Get input token from tokens map
+    const inputToken = tokens.get("hype");
+    if (!inputToken) {
+        throw new Error("Input token not found");
+    }
+    // Get output token by address (for unverified tokens)
+    const outputToken = await fibrous.getToken(
+        "0xb8ce59fc3717ada4c02eadf9682a9e934f625ebb",
+        chainId,
+    );
+    if (!outputToken) {
+        throw new Error("Output token not found");
+    }
+    const tokenInAddress = inputToken.address;
+    const tokenOutAddress = outputToken.address;
+    const tokenInDecimals = Number(inputToken.decimals);
+    const inputAmount = BigInt(parseUnits("1", tokenInDecimals)); // 1 Hype
+    
+    try {
+        const route = await fibrous.getBestRoute(
+            inputAmount,
+            tokenInAddress,
+            tokenOutAddress,
+            "hyperevm", // chainName will be deprecated in the future, use chainId instead
+            {
+                reverse: false,
+            },
+            chainId,
+        );
+        console.log("route", route);
+    } catch (error) {
+        console.error(error);
+    }
 }
 
-const tokens = await router.supportedTokens(chainId);
-const inputToken = await router.getToken(
-  "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2",
-  chainId, // Use chainId instead of chainName
-);
-if (!inputToken) {
-  throw new Error("Input token not found");
-}
-const tokenInAddress = inputToken.address;
-const tokenOutAddress = tokens.get("usdc")?.address; // Use .get() method for Map
-if (!tokenOutAddress) {
-    throw new Error("Output token not found");
-}
-const tokenInDecimals = Number(inputToken.decimals);
-const inputAmount = BigInt(parseUnits("5", tokenInDecimals));
-
-const route = await router.getBestRoute(
-  inputAmount, // amount
-  tokenInAddress, // token input
-  tokenOutAddress, // token output
-  "base", // chainName (will be deprecated, use chainId instead)
-  {}, // options
-  chainId, // chainId parameter
-);
-// returns route type (src/types/route.ts)
+main().catch((e) => {
+    console.error("Error: ", e);
+});
 ```
 
-Build transaction on Base
+Build Route And Calldata on EVM
 
 ```javascript
-import { Router as FibrousRouter } from "fibrous-router-sdk";
-import { parseUnits } from "ethers";
+// import { Router as FibrousRouter } from "fibrous-router-sdk";
+import { Router as FibrousRouter } from "../../../src";
+import {  ethers, parseUnits } from "ethers";
 import { account } from "./account";
+import { humanReadableEvmSwapCallDataLog } from "../utils/humanReadableEvmLog";
+import dotenv from "dotenv";
+import { monitorTransaction } from "./utils";
 
-// RPC URL for the Base network, you can change this to the RPC URL of your choice
-const RPC_URL = process.env.BASE_RPC_URL;
-// Destination address for the swap
+dotenv.config();
+// RPC URL for the EVM network, you can change this to the RPC URL of your choice
+const RPC_URL = process.env.HYPER_EVM_RPC_URL;
+// Destination address for the swap (optional)
 const destination = process.env.EVM_PUBLIC_KEY;
 // Private key of the account that will be used to sign the transaction
 const privateKey = process.env.EVM_PRIVATE_KEY;
 
-const chainName = "base";
-// Create a new router instance
-const fibrous = new FibrousRouter();
-
-const chainId = fibrous.supportedChains.find(chain => chain.chain_name === "base")?.chain_id;
-if (!chainId) {
-    throw new Error("Chain not supported");
-}
-
-// Create a new contract instance
-const account0 = account(privateKey, RPC_URL);
-const contractwwallet = await fibrous.getContractWAccount(account0, chainId);
-const provider = new ethers.JsonRpcProvider(RPC_URL);
-
-// Build route options
-const tokens = await fibrous.supportedTokens(chainId);
-const inputToken = await fibrous.getToken(
-  "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2",
-  chainId, // Use chainId instead of chainName
-);
-if (!inputToken) {
-  throw new Error("Input token not found");
-}
-const tokenInAddress = inputToken.address;
-const tokenOutAddress = tokens.get("usdc")?.address; // Use .get() method
-if (!tokenOutAddress) {
-    throw new Error("Output token not found");
-}
-const tokenInDecimals = Number(inputToken.decimals);
-const inputAmount = BigInt(parseUnits("5", tokenInDecimals));
-
-// Call the buildTransaction method in order to build the transaction
-// slippage: The maximum acceptable slippage of the buyAmount amount.
-const slippage = 1;
-const swapCall = await fibrous.buildTransaction(
-  inputAmount,
-  tokenInAddress,
-  tokenOutAddress,
-  slippage,
-  destination,
-  "base", // chainName (will be deprecated)
-  {}, // options
-  chainId, // chainId parameter
-);
-
-const approveResponse = await fibrous.buildApproveEVM(
-  inputAmount,
-  tokenInAddress,
-  account0,
-  chainId, // Use chainId instead of chainName
-);
-if (approveResponse === true) {
-  try {
-    // Type guard: EVM chains return EvmTransactionData
-    if ("route" in swapCall && "swap_parameters" in swapCall) {
-      const feeData = await provider.getFeeData();
-      if (!feeData.gasPrice) {
-        console.log("gasPrice not found");
-        return;
-      }
-      
-      // Check if native token (ETH) to include value
-      const isNativeToken = tokenInAddress === "0x0000000000000000000000000000000000000000";
-      
-      const tx = await contractwwallet.swap(
-        swapCall.route,
-        swapCall.swap_parameters,
-        {
-          gasPrice: feeData.gasPrice * 2n,
-          value: isNativeToken ? inputAmount : undefined, // Include value for native token swaps
-        },
-      );
-      await tx.wait();
-      console.log(`https://basescan.org/tx/${tx.hash}`);
-    } else {
-      console.error("Invalid swap call data for EVM transaction");
+async function main() {
+    const fibrous = new FibrousRouter();
+    if (!privateKey || !RPC_URL || !destination) {
+        throw new Error("Missing environment variables");
     }
-  } catch (e) {
-    console.error("Error swapping tokens: ", e);
+    // Create a new contract instance
+    const account0 = account(privateKey, RPC_URL);
+    const chainId = fibrous.supportedChains.find(chain => chain.chain_name == "hyperevm")?.chain_id;
+    if (!chainId) {
+        throw new Error("Chain not supported");
+    }
 
-  }
-} else {
-  console.error("Error approving tokens - make sure you have sufficient balance");
+    const contractWallet = await fibrous.getContractWAccount(account0 as any, chainId);
+    const provider = new ethers.JsonRpcProvider(RPC_URL);
+    // Build route options
+    const tokens = await fibrous.supportedTokens(chainId);
+    const inputToken = tokens.get("hype");
+    if (!inputToken) {
+        throw new Error("Input token not found");
+    }
+    const tokenInAddress = inputToken.address;
+    const outputToken = tokens.get("khype");
+    if (!outputToken) {
+        throw new Error("Output token not found");
+    }
+    const tokenOutAddress = outputToken.address;
+    const tokenInDecimals = Number(inputToken.decimals);
+    const inputAmount = BigInt(parseUnits("10", tokenInDecimals));
+    const isNativeToken = tokenInAddress == "0x0000000000000000000000000000000000000000";
+    // Build route and calldata
+    const {route, calldata} = await fibrous.buildRouteAndCalldata(
+        inputAmount,
+        tokenInAddress,
+        tokenOutAddress,
+        1, // slippage
+        destination || account0.address,
+        chainId,
+    );
+
+    const approveResponse = await fibrous.buildApproveEVM(
+        inputAmount,
+        tokenInAddress,
+        account0 as any,
+        chainId,
+    );
+    humanReadableEvmSwapCallDataLog(
+        calldata,
+        inputToken,
+        outputToken,
+        await fibrous.supportedProtocols(chainId),
+    );
+    if (approveResponse === true) {
+        try {
+            // Type guard: EVM chains return EvmTransactionData
+            if ("route" in calldata && "swap_parameters" in calldata) {
+                const feeData = await provider.getFeeData();
+                if (!feeData.gasPrice) {
+                    console.log("gasPrice not found");
+                    return;
+                }
+                let tx;
+                if (isNativeToken) {
+                    tx = await contractWallet.swap(
+                        calldata.route,
+                        calldata.swap_parameters,
+                        {
+                            value: inputAmount,
+                            gasPrice: feeData.gasPrice * 4n,
+                        },
+                    );
+                } else {
+                    tx = await contractWallet.swap(
+                        calldata.route,
+                        calldata.swap_parameters,
+                        {
+                            gasPrice: feeData.gasPrice * 2n,
+                        },
+                    );
+                }
+                await monitorTransaction(tx);
+            } else {
+                console.error("Invalid swap call data for EVM transaction");
+            }
+        } catch (e) {
+            console.error("Error swapping tokens: ", e);
+        }
+    } else {
+        console.error("Error approving tokens");
+    }
 }
+
+main().catch((e) => {
+    console.error("Error: ", e);
+});
 ```
 
 ## Contributing

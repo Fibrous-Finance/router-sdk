@@ -143,19 +143,18 @@ const inputAmount = BigInt(parseUnits("0.0001", tokenInDecimals)); // 0.0001 ETH
 // Call the buildTransaction method in order to build the transaction
 // slippage: The maximum acceptable slippage of the buyAmount amount.
 const slippage = 1; // 1%
-const swapCall = await fibrous.buildTransaction(
+const {route, calldata} = await fibrous.buildRouteAndCalldata(
     inputAmount,
     tokenInAddress,
     tokenOutAddress,
     slippage,
     DESTINATION,
-    "starknet", // chainName will be deprecated in the future, use chainId instead
+    chainId,
     {
         reverse: false,
         direct: false,
         excludeProtocols: [],
     },
-    chainId,
 );
 
 // https://www.starknetjs.com/docs/guides/connect_account
@@ -166,15 +165,15 @@ const approveCall: Call = await fibrous.buildApproveStarknet(
     tokenInAddress,
 );
 humanReadableStarknetSwapCallDataLog(
-    swapCall,
+    calldata,
     inputToken,
     outputToken,
     await fibrous.supportedProtocols(chainId),
 );
 
 // Type guard: Starknet chains return Call
-if ("contractAddress" in swapCall && "entrypoint" in swapCall) {
-    const resp = await account0.execute([approveCall, swapCall]);
+if ("contractAddress" in calldata && "entrypoint" in calldata) {
+    const resp = await account0.execute([approveCall, calldata]);
     console.log(`https://voyager.online/tx/${resp.transaction_hash}`);
 } else {
     console.error("Invalid swap call data for Starknet transaction");
