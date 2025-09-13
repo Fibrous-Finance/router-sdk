@@ -1,6 +1,6 @@
 import { Token } from "./token";
 import { ProtocolId } from "./enums";
-import { BigNumber } from "@ethersproject/bignumber";
+import { BigNumberish } from "starknet";
 
 export type Percent = `${string}%`;
 
@@ -11,7 +11,7 @@ export type RouteOverrides = {
 };
 
 export type RouteParams = {
-    amount: BigNumber;
+    amount: AmountType;
     tokenInAddress: string;
     tokenOutAddress: string;
 } & Partial<
@@ -19,7 +19,7 @@ export type RouteParams = {
 >;
 
 export type RouteExecuteParams = {
-    amount: string;
+    amount: AmountType;
     tokenInAddress: string;
     tokenOutAddress: string;
     slippage: number;
@@ -29,7 +29,7 @@ export type RouteExecuteParams = {
 >;
 
 export type RouteParamsBatch = {
-    amounts: BigNumber[];
+    amounts: AmountType[];
     tokenInAddresses: string[];
     tokenOutAddresses: string[];
 } & Partial<
@@ -37,7 +37,7 @@ export type RouteParamsBatch = {
 >;
 
 export type RouteExecuteBatchParams = {
-    amounts: string[];
+    amounts: AmountType[];
     tokenInAddresses: string[];
     tokenOutAddresses: string[];
     slippage: number;
@@ -45,7 +45,6 @@ export type RouteExecuteBatchParams = {
 } & Partial<
     Omit<RouteOverrides, "excludeProtocols"> & { excludeProtocols: string }
 >;
-
 
 export type RouteFailure = {
     success: false;
@@ -95,3 +94,30 @@ export type TransactionConfig = {
     slippage: number;
     accountAddress: string;
 };
+
+export type EvmRouteParam = {
+    token_in: string;
+    token_out: string;
+    amount_in: string;
+    amount_out: string;
+    min_received: string;
+    destination: string;
+    swap_type: number;
+};
+
+export type EvmSwapParam = {
+    token_in: string;
+    token_out: string;
+    rate: number;
+    protocol_id: number;
+    pool_address: string;
+    swap_type: number;
+    extra_data: string | string[];
+};
+
+export type EvmTransactionData = {
+    route: EvmRouteParam;
+    swap_parameters: EvmSwapParam[];
+};
+
+export type AmountType = bigint | string | number | BigNumberish;

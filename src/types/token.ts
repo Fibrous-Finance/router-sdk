@@ -1,22 +1,35 @@
 export type Token = {
+    // Address of the token contract
+    address: string;
+
     // Name of the token
     name: string;
 
     // Symbol of the token
     symbol: string;
 
-    // Decimal points of the token
-    decimals: number;
+    // Decimal points of the token (can be string from API)
+    decimals: string;
 
-    // Address of the token contract
-    address: string;
+    // Price in USD (can be null or string from API)
+    price: string | null;
 
-    // If the token is base (DAI, USDC, ETH, WBTC etc.)
-    isBase: boolean;
+    // Image URL for the token icon
+    image_url?: string;
 
-    // If the token is native (ETH on Ethereum)
-    isNative: boolean;
+    // Base token flag (can be null)
+    base?: boolean | null;
 
-    // Price in USD
-    price: number;
+    // Native token flag (can be null)
+    native?: boolean | null;
+
+    // Verification status
+    verified?: boolean;
+
+    // Token category
+    category?: string | null;
+
+    // Legacy fields for backward compatibility
+    isBase?: boolean;
+    isNative?: boolean;
 };

@@ -19,10 +19,13 @@ export const buildRouteUrl = (
     url: string,
     params: RouteParams | RouteExecuteParams | RouteExecuteBatchParams,
 ): string => {
-    const requestParams = Object.keys(params)
-        .map((key) => `${key}=${params[key]}`)
-        .join("&");
-    return `${url}?${requestParams}`;
+    const query = new URLSearchParams();
+    for (const [key, value] of Object.entries(params)) {
+        if (value !== undefined) {
+            query.append(key, String(value));
+        }
+    }
+    return `${url}?${query.toString()}`;
 };
 
 /**
@@ -35,16 +38,17 @@ export const buildRouteUrlBatch = (
     url: string,
     params: RouteParamsBatch,
 ): string => {
-    const requestParams = Object.keys(params)
-        .map((key) => {
-            // Handle array-like values by joining with commas
-            const value = Array.isArray(params[key])
-                ? params[key].join(',')
-                : params[key];
-            return `${key}=${value}`;
-        })
-        .join("&");
-    return `${url}?${requestParams}`;
+    const query = new URLSearchParams();
+    for (const [key, value] of Object.entries(params)) {
+        if (value !== undefined) {
+            if (Array.isArray(value)) {
+                query.append(key, value.join(","));
+            } else {
+                query.append(key, String(value));
+            }
+        }
+    }
+    return `${url}?${query.toString()}`;
 };
 
 /**
@@ -52,8 +56,10 @@ export const buildRouteUrlBatch = (
  * @param apiKey Optional API key
  * @returns Headers for the request
  */
-export const buildHeaders = (apiKey?: string): Record<string, string> => {
-    const headers = {};
+export const buildHeaders = (
+    apiKey?: string | null,
+): Record<string, string> => {
+    const headers: Record<string, string> = {};
     if (apiKey != null) headers["X-API-Key"] = apiKey;
     return headers;
 };
@@ -97,7 +103,7 @@ export function buildSwapCalldata(
         for (let i = 0; i < route.swaps.length; i++) {
             const hop = route.swaps[i];
 
-            let hopPercent = i == 0 ? execPercent : 1;
+            const hopPercent = i == 0 ? execPercent : 1;
             let remainingSwapPercent = 100;
 
             // Input assumption: hop.reduce((p, swap) => p + swap.percent, 0) == 100
