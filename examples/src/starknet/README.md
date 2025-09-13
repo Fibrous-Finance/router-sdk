@@ -13,7 +13,13 @@
 Fetching Tokens
 
 ```javascript
-import { Router as FibrousRouter } from "fibrous-router-sdk";b
+
+ /**
+ * Returns the supported verified token list for a given chain.
+ * @param chainId Chain ID.
+ * @returns Map of lowercased symbol -> Token.
+ */
+import { Router as FibrousRouter } from "fibrous-router-sdk";
 const router = new FibrousRouter();
 const chainId = router.supportedChains.find(
     (chain) => chain.chain_name == "starknet",
@@ -21,6 +27,7 @@ const chainId = router.supportedChains.find(
 if (!chainId) {
     throw new Error("Chain not supported");
 }
+
 const tokens = await router.supportedTokens(chainId);
 Map<string, Token>
 // Access tokens like: tokens.get("usdc") or tokens.get("eth")
@@ -29,6 +36,12 @@ Map<string, Token>
 Fetching Protocols
 
 ```javascript
+
+/**
+ * Returns supported protocols for a given chain
+ * @param chainId Chain ID.
+ * @returns Mapping of AMM name -> protocol identifier.
+ */
 import { Router as FibrousRouter } from "fibrous-router-sdk";b
 
 const router = new FibrousRouter();
@@ -242,7 +255,7 @@ const swapCalls = await fibrous.buildBatchTransaction(
     tokenOutAddresses,
     slippage,
     destination,
-    "starknet", // chainName will be deprecated in the future, use chainId instead
+    "starknet", // chainName will be deprecated in the next version, use chainId instead
     {reverse: false, direct: false, excludeProtocols: []},
     chainId,
 );

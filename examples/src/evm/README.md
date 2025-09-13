@@ -18,90 +18,99 @@
 Fetching Tokens
 
 ```javascript
+ /**
+ * Returns the supported verified token list for a given chain.
+ * @param chainId Chain ID.
+ * @returns Map of lowercased symbol -> Token.
+ */
+
 import { Router as FibrousRouter } from "fibrous-router-sdk";
 
 // Example of getting a list of tokens
-async function main() {
-    // Create a new router instance
-    const router = new FibrousRouter();
-    const chainId = router.supportedChains.find(chain => chain.chain_name == "base")?.chain_id;
-    if (!chainId) {
-        throw new Error("Chain not supported");
-    }
-    try {
-        // returns verifed tokens
-        const tokens = await router.supportedTokens(chainId); // returns Map<string, Token>
-        console.log("Tokens: ", tokens);
-        // Get a specific token by address
-        const token = await router.getToken(
-            "0x0000000000000000000000000000000000000000",
-            chainId,
-        );
-        console.log("Token: ", token);
-    } catch (error) {
-        console.error(error);
-    }
+const router = new FibrousRouter();
+const chainId = router.supportedChains.find(chain => chain.chain_name == "base")?.chain_id;
+if (!chainId) {
+throw new Error("Chain not supported");
+}
+// returns verifed tokens
+const tokens = await router.supportedTokens(chainId); // returns Map<string, Token>
+console.log("Tokens: ", tokens);
+// Get a specific token by address
+const token = await router.getToken(
+    "0x0000000000000000000000000000000000000000",
+    chainId,
+);
+console.log("Token: ", token);
+  
+
+```
+
+Fetching Protocols
+
+```javascript
+
+/**
+ * Returns supported protocols for a given chain
+ * @param chainId Chain ID.
+ * @returns Mapping of AMM name -> protocol identifier.
+ */
+import { Router as FibrousRouter } from "fibrous-router-sdk";b
+
+const router = new FibrousRouter();
+const chainId = router.supportedChains.find(chain => chain.chain_name == "hyperevm")?.chain_id;
+if (!chainId) {
+    throw new Error("Chain not supported");
 }
 
-main().catch((e) => {
-    console.error("Error: ", e);
-});
+const protocols = await router.supportedProtocols(chainId);
+console.log(protocols);
 ```
 
 Fetching route
 
 ```javascript
+
 import { Router as FibrousRouter } from "fibrous-router-sdk";
 import { parseUnits } from "ethers";
 
-async function main() {
-    // Create a new router instance
-    const fibrous = new FibrousRouter();
-    const chainId = fibrous.supportedChains.find(chain => chain.chain_name == "hyperevm")?.chain_id;
-    if (!chainId) {
-        throw new Error("Chain not supported");
-    }
-    
-    // Build route options
-    const tokens = await fibrous.supportedTokens(chainId);
-    // Get input token from tokens map
-    const inputToken = tokens.get("hype");
-    if (!inputToken) {
-        throw new Error("Input token not found");
-    }
-    // Get output token by address (for unverified tokens)
-    const outputToken = await fibrous.getToken(
-        "0xb8ce59fc3717ada4c02eadf9682a9e934f625ebb",
-        chainId,
-    );
-    if (!outputToken) {
-        throw new Error("Output token not found");
-    }
-    const tokenInAddress = inputToken.address;
-    const tokenOutAddress = outputToken.address;
-    const tokenInDecimals = Number(inputToken.decimals);
-    const inputAmount = BigInt(parseUnits("1", tokenInDecimals)); // 1 Hype
-    
-    try {
-        const route = await fibrous.getBestRoute(
-            inputAmount,
-            tokenInAddress,
-            tokenOutAddress,
-            "hyperevm", // chainName will be deprecated in the future, use chainId instead
-            {
-                reverse: false,
-            },
-            chainId,
-        );
-        console.log("route", route);
-    } catch (error) {
-        console.error(error);
-    }
+// Create a new router instance
+const fibrous = new FibrousRouter();
+const chainId = fibrous.supportedChains.find(chain => chain.chain_name == "hyperevm")?.chain_id;
+if (!chainId) {
+    throw new Error("Chain not supported");
 }
 
-main().catch((e) => {
-    console.error("Error: ", e);
-});
+// Build route options
+const tokens = await fibrous.supportedTokens(chainId);
+// Get input token from tokens map
+const inputToken = tokens.get("hype");
+if (!inputToken) {
+    throw new Error("Input token not found");
+}
+// Get output token by address (for unverified tokens)
+const outputToken = await fibrous.getToken(
+    "0xb8ce59fc3717ada4c02eadf9682a9e934f625ebb",
+    chainId,
+);
+if (!outputToken) {
+    throw new Error("Output token not found");
+}
+const tokenInAddress = inputToken.address;
+const tokenOutAddress = outputToken.address;
+const tokenInDecimals = Number(inputToken.decimals);
+const inputAmount = BigInt(parseUnits("1", tokenInDecimals)); // 1 Hype
+
+const route = await fibrous.getBestRoute(
+    inputAmount,
+    tokenInAddress,
+    tokenOutAddress,
+    "hyperevm", // chainName will be deprecated in the future, use chainId instead
+    {
+        reverse: false,
+    },
+    chainId,
+);
+
 ```
 
 Build Route And Calldata on EVM

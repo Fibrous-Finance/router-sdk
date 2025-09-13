@@ -53,7 +53,7 @@ export class Router implements IRouter {
         amount: AmountType,
         tokenInAddress: string,
         tokenOutAddress: string,
-        chainName: string,
+        chainName?: string,
         options?: Partial<RouteOverrides>,
         chainId?: number,
     ): Promise<RouteResponse> {
