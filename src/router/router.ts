@@ -20,8 +20,9 @@ import { ethers, Wallet } from "ethers";
 import { BigNumberish, Call } from "starknet";
 import { CHAIN_MAP } from "../types/";
 import { CHAIN_ID_MAP } from "../constants";
+import { IRouter } from "../types";
 
-export class Router {
+export class Router implements IRouter {
     readonly DEFAULT_API_URL = "https://api.fibrous.finance";
     readonly GRAPH_API_URL = "https://graph.fibrous.finance";
     public supportedChains: CHAIN_MAP[] = CHAIN_ID_MAP;
@@ -281,6 +282,7 @@ export class Router {
      * @param route: Route response
      * @param slippage: Slippage percentage (1 = 1%)
      * @param receiverAddress: Address to receive the tokens
+     * @Attention: This function will be deprecated, use buildRouteAndCalldata instead
      */
     async buildTransaction(
         inputAmount: AmountType,
@@ -325,7 +327,6 @@ export class Router {
             }
             routeParams[key as any] = value;
         }
-
         const routeUrl = buildRouteUrl(
             `${this.apiUrl}/${chain.chain_name}/route`,
             routeParams,
@@ -355,7 +356,80 @@ export class Router {
                 calldata: calldata,
             };
         }else {
-            return calldata;
+            return calldata
+        }
+    }
+
+    /**
+     * Builds a route and calldata out of the route response
+     * @param inputAmount: Amount to swap, formatted
+     * @param tokenInAddress: Token to swap from
+     * @param tokenOutAddress: Token to swap to
+     * @param slippage: Slippage percentage (1 = 1%)
+     * @param destination: Address to receive the tokens
+     * @param chainId: Chain ID
+     * @param options: Optional parameters
+     * @returns Route and calldata response
+     * @throws Error if the chain is not supported
+     */
+    async buildRouteAndCalldata(
+        inputAmount: AmountType,
+        tokenInAddress: string,
+        tokenOutAddress: string,
+        slippage: number,
+        destination: string,
+        chainId: number,
+        options?: Partial<RouteOverrides>,
+    ): Promise<Call | any> {     
+        const chain = this.supportedChains.find(
+                (chain) => chain.chain_id == chainId,
+            );
+        if (!chain) {
+            throw new Error("Chain not supported");
+        }
+    
+    
+        const amount = inputAmount.toString();
+        const routeParams: RouteExecuteParams = {
+            amount,
+            tokenInAddress,
+            tokenOutAddress,
+            slippage,
+            destination,
+        };
+
+        // Add optional parameters
+        for (const [key, value] of Object.entries(options ?? {})) {
+            if (key == "excludeProtocols") {
+                routeParams.excludeProtocols = (value as ProtocolId[]).join(
+                    ",",
+                );
+                continue;
+            }
+            routeParams[key as any] = value;
+        }
+    
+
+        const calldataUrl = buildRouteUrl(
+            `${this.apiUrl}/${chain.chain_name}/calldata`,
+            routeParams,
+        );
+        const calldataResponse = await fetch(calldataUrl, {
+            headers: buildHeaders(this.apiKey),
+        }).then((response) => response.json());
+     
+
+        if (chain.chain_id == 23448594291968336) {
+            return {
+                route: calldataResponse.route,
+                calldata: {
+                contractAddress: chain.router_address,
+                entrypoint: "swap",
+                calldata: calldataResponse.calldata,
+                }
+            };
+        }else {
+            return calldataResponse
         }
     }
 
