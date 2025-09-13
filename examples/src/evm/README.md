@@ -32,7 +32,7 @@ const chainId = router.supportedChains.find(chain => chain.chain_name == "base")
 if (!chainId) {
 throw new Error("Chain not supported");
 }
-// returns verifed tokens
+// returns verified tokens
 const tokens = await router.supportedTokens(chainId); // returns Map<string, Token>
 console.log("Tokens: ", tokens);
 // Get a specific token by address
