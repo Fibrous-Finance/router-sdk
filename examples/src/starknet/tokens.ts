@@ -1,16 +1,18 @@
-import { Router as FibrousRouter } from "fibrous-router-sdk";
+// import { Router as FibrousRouter } from "fibrous-router-sdk";
+import { Router as FibrousRouter } from "../../../src";
 
 // Example of getting a list of tokens
 async function main() {
     // Create a new router instance
     const router = new FibrousRouter();
-
-    try {
-        const tokens = await router.supportedTokens("starknet");
-        console.log(tokens);
-    } catch (error) {
-        console.error(error);
+    const chainId = router.supportedChains.find(
+        (chain) => chain.chain_name == "starknet",
+    )?.chain_id;
+    if (!chainId) {
+        throw new Error("Chain not supported");
     }
+    const tokens = await router.supportedTokens(chainId);
+    console.log(tokens);
 }
 
 main();

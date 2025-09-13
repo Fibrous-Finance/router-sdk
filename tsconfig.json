@@ -1,17 +1,65 @@
 {
-    "compilerOptions": {
-        "module": "CommonJS",
-        "declaration": true,
-        "removeComments": false,
-        "allowSyntheticDefaultImports": true,
-        "target": "ES2020",
-        "sourceMap": true,
-        "declarationMap": true,
-        "skipLibCheck": true,
-        "outDir": "./dist",
-        "baseUrl": "./",
-        "experimentalDecorators": true,
-    },
-    "include": ["src/**/*"],
-    "exclude": ["node_modules"]
+  "compilerOptions": {
+    /* Language and Environment */
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "allowJs": true,
+    "checkJs": false,
+
+    /* Type Checking - Completely Flexible */
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "strictFunctionTypes": false,
+    "strictBindCallApply": false,
+    "strictPropertyInitialization": false,
+    "noImplicitThis": false,
+    "noImplicitReturns": false,
+    "noFallthroughCasesInSwitch": false,
+    "noUncheckedIndexedAccess": false,
+    "allowUnusedLabels": true,
+    "allowUnreachableCode": true,
+    "exactOptionalPropertyTypes": false,
+    "noImplicitOverride": false,
+    "noPropertyAccessFromIndexSignature": false,
+
+    /* Additional Flexibility */
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+
+    /* Emit */
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "dist",
+    "removeComments": false,
+    "noEmitOnError": false,
+    "noEmit": false,
+    "preserveConstEnums": true,
+
+    /* Interop Constraints */
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": false,
+    "allowImportingTsExtensions": false,
+
+    /* Completeness */
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true
+  },
+  "include": ["src/**/*"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "examples",
+    "tests",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/coverage",
+    "**/.DS_Store"
+  ]
 }

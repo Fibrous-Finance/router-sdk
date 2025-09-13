@@ -1,4 +1,9 @@
-import { approveToERC20, buildHeaders, buildRouteUrl, buildRouteUrlBatch } from "../utils";
+import {
+    approveToERC20,
+    buildHeaders,
+    buildRouteUrl,
+    buildRouteUrlBatch,
+} from "../utils";
 import {
     RouteParams,
     RouteResponse,
@@ -8,21 +13,21 @@ import {
     RouteExecuteParams,
     RouteExecuteBatchParams,
     RouteParamsBatch,
+    AmountType,
 } from "../types";
 import { fibrousRouterABI, erc20ABI, baseRouterAbi } from "../abis";
-import { BigNumber } from "@ethersproject/bignumber";
 import { ethers, Wallet } from "ethers";
-import { Call } from "starknet";
+import { BigNumberish, Call } from "starknet";
+import { CHAIN_MAP } from "../types/";
+import { CHAIN_ID_MAP } from "../constants";
+import { IRouter } from "../types";
 
-export class Router {
+export class Router implements IRouter {
     readonly DEFAULT_API_URL = "https://api.fibrous.finance";
     readonly GRAPH_API_URL = "https://graph.fibrous.finance";
-    readonly STARKNET_ROUTER_ADDRESS =
-        "0x00f6f4CF62E3C010E0aC2451cC7807b5eEc19a40b0FaaCd00CCA3914280FDf5a";
-    readonly SCROLL_ROUTER_ADDRESS =
-        "0x4bb92d3f730d5a7976707570228f5cb7e09094c5";
-    readonly BASE_ROUTER_ADDRESS = "0x274602a953847d807231d2370072F5f4E4594B44";
-
+    public supportedChains: CHAIN_MAP[] = CHAIN_ID_MAP;
+    readonly NATIVE_TOKEN_ADDRESS =
+        "0x0000000000000000000000000000000000000000";
     private readonly apiUrl: string;
     private readonly apiKey: string | null;
 
@@ -32,6 +37,7 @@ export class Router {
             dedicatedUrl = dedicatedUrl.substring(0, dedicatedUrl.length - 1);
         this.apiUrl = dedicatedUrl ?? this.DEFAULT_API_URL;
         this.apiKey = apiKey ?? null;
+    
     }
 
     /**
@@ -44,12 +50,26 @@ export class Router {
      * @throws Error if the API returns an error
      */
     async getBestRoute(
-        amount: BigNumber,
+        amount: AmountType,
         tokenInAddress: string,
         tokenOutAddress: string,
-        chainName: string,
+        chainName?: string,
         options?: Partial<RouteOverrides>,
+        chainId?: number,
     ): Promise<RouteResponse> {
+        let chain;
+        if (chainId) {
+            chain = this.supportedChains.find(
+                (chain) => chain.chain_id == chainId,
+            );
+        } else {
+            chain = this.supportedChains.find(
+                (chain) => chain.chain_name == chainName,
+            );
+        }
+        if (!chain) {
+            throw new Error("Chain not supported");
+        }
         // Create params object
         const routeParams: RouteParams = {
             amount,
@@ -69,7 +89,7 @@ export class Router {
         }
 
         const routeUrl = buildRouteUrl(
-            `${this.apiUrl}/${chainName}/route`,
+            `${this.apiUrl}/${chain ? chain.chain_name : chainName}/route`,
             routeParams,
         );
         return await fetch(routeUrl, {
@@ -78,7 +98,7 @@ export class Router {
     }
 
     async getBestRouteBatch(
-        amounts: BigNumber[],
+        amounts: bigint[] | string[] | number[] | BigNumberish[],
         tokenInAddresses: string[],
         tokenOutAddresses: string[],
         chainName: string,
@@ -111,12 +131,18 @@ export class Router {
         return response;
     }
 
-    
     /**
      * @param chainName Chain ID to get the supported tokens for
      * @returns Supported token list
      */
-    async supportedTokens(chainName: string): Promise<Map<string, Token>> {
+    async supportedTokens(chainId: number): Promise<Map<string, Token>> {
+        const chain = this.supportedChains.find(
+            (chain) => chain.chain_id == chainId,
+        );
+        if (!chain) {
+            throw new Error("Chain not supported");
+        }
+        const chainName = chain.chain_name;
         const tokens: Token[] = await fetch(
             `${this.GRAPH_API_URL}/${chainName}/tokens`,
             {
@@ -135,7 +161,7 @@ export class Router {
         });
         return tokensMap;
     }
-    
+
     /**
      *
      * @param address Token address
@@ -143,7 +169,14 @@ export class Router {
      * @returns Token object
      */
 
-    async getToken(address: string, chainName: string): Promise<Token | null> {
+    async getToken(address: string, chainId: number): Promise<Token | null> {
+        const chain = this.supportedChains.find(
+            (chain) => chain.chain_id == chainId,
+        );
+        if (!chain) {
+            throw new Error("Chain not supported");
+        }
+        const chainName = chain.chain_name;
         const token: Token = await fetch(
             `${this.GRAPH_API_URL}/${chainName}/tokens/${address}`,
             {
@@ -157,8 +190,15 @@ export class Router {
      * @returns Supported protocol list
      */
     async supportedProtocols(
-        chainName: string,
+        chainId: number,
     ): Promise<Record<string, ProtocolId>> {
+        const chain = this.supportedChains.find(
+            (chain) => chain.chain_id == chainId,
+        );
+        if (!chain) {
+            throw new Error("Chain not supported");
+        }
+        const chainName = chain.chain_name;
         const protocols: { amm_name: string; protocol: ProtocolId }[] =
             await fetch(`${this.GRAPH_API_URL}/${chainName}/protocols`, {
                 headers: buildHeaders(this.apiKey),
@@ -177,14 +217,20 @@ export class Router {
      * @param tokenAddress: Token to approve
      */
     async buildApproveStarknet(
-        amount: BigNumber,
+        amount: AmountType,
         tokenAddress: string,
     ): Promise<Call> {
-        const amountHex = amount.toHexString();
+        const chain = this.supportedChains.find(
+            (chain) => chain.chain_id == 23448594291968336,
+        );
+        if (!chain) {
+            throw new Error("Starknet is not supported");
+        }
+        const amountHex = "0x" + amount.toString(16);
         const approveCall = approveToERC20(
             amountHex,
             tokenAddress,
-            this.STARKNET_ROUTER_ADDRESS,
+            chain.router_address,
         );
         return approveCall;
     }
@@ -194,55 +240,41 @@ export class Router {
      * @param amount: Amount to approve, formatted
      * @param tokenAddress: Token to approve
      * @param account: Wallet to use
-     * @param chainName: Chain ID to get the router address for
+     * @param chainId: Chain ID to get the router address for
      */
     async buildApproveEVM(
-        amount: BigNumber,
+        amount: AmountType,
         tokenAddress: string,
         account: Wallet,
-        chainName: string,
+        chainId?: number,
     ): Promise<boolean> {
-        if (chainName == "scroll") {
-            const tokenContract = new ethers.Contract(
-                tokenAddress,
-                erc20ABI,
-                account,
-            );
-            const allowance = await tokenContract.allowance(
-                await account.getAddress(),
-                this.SCROLL_ROUTER_ADDRESS,
-            );
-            if (Number(allowance) >= Number(amount)) {
-                return true;
-            }
-            const approveTx = await tokenContract.approve(
-                this.SCROLL_ROUTER_ADDRESS,
-                amount.toString(),
-            );
-            await approveTx.wait();
+        if (tokenAddress == this.NATIVE_TOKEN_ADDRESS) {
             return true;
-        } else if (chainName == "base") {
-            const tokenContract = new ethers.Contract(
-                tokenAddress,
-                erc20ABI,
-                account,
-            );
-            const allowance = await tokenContract.allowance(
-                await account.getAddress(),
-                this.BASE_ROUTER_ADDRESS,
-            );
-            if (Number(allowance) >= Number(amount)) {
-                return true;
-            }
-            const approveTx = await tokenContract.approve(
-                this.BASE_ROUTER_ADDRESS,
-                amount.toString(),
-            );
-            await approveTx.wait();
-            return true;
-        } else {
-            throw new Error("Invalid chain ID");
         }
+        const routerAddress = this.supportedChains.find(
+            (chain) => chain.chain_id == chainId,
+        )?.router_address;
+        if (!routerAddress) {
+            throw new Error("Router address not found");
+        }
+        const tokenContract = new ethers.Contract(
+            tokenAddress,
+            erc20ABI,
+            account,
+        );
+        const allowance = await tokenContract.allowance(
+            await account.getAddress(),
+            routerAddress,
+        );
+        if (Number(allowance) >= Number(amount)) {
+            return true;
+        }
+        const approveTx = await tokenContract.approve(
+            routerAddress,
+            amount.toString(),
+        );
+        await approveTx.wait();
+        return true;
     }
 
     /**
@@ -250,17 +282,33 @@ export class Router {
      * @param route: Route response
      * @param slippage: Slippage percentage (1 = 1%)
      * @param receiverAddress: Address to receive the tokens
+     * @Attention: This function will be deprecated, use buildRouteAndCalldata instead
      */
     async buildTransaction(
-        inputAmount: BigNumber,
+        inputAmount: AmountType,
         tokenInAddress: string,
         tokenOutAddress: string,
         slippage: number,
         destination: string,
         chainName: string,
         options?: Partial<RouteOverrides>,
-    ): Promise<Call | any> {
-        const amount = inputAmount.toHexString();
+        chainId?: number,
+    ): Promise<Call | any> {     
+        let chain;
+        // we will keep both chainName and chainId for backward compatibility
+        if (chainId) {
+            chain = this.supportedChains.find(
+                (chain) => chain.chain_id == chainId,
+            );
+        } else {
+            chain = this.supportedChains.find(
+                (chain) => chain.chain_name == chainName,
+            );
+        }
+        if (!chain) {
+            throw new Error("Chain not supported");
+        }
+        const amount = inputAmount.toString();
         const routeParams: RouteExecuteParams = {
             amount,
             tokenInAddress,
@@ -279,9 +327,8 @@ export class Router {
             }
             routeParams[key as any] = value;
         }
-
         const routeUrl = buildRouteUrl(
-            `${this.apiUrl}/${chainName}/route`,
+            `${this.apiUrl}/${chain.chain_name}/route`,
             routeParams,
         );
         const route = await fetch(routeUrl, {
@@ -292,7 +339,7 @@ export class Router {
             signer: destination,
             slippage: slippage,
         };
-        const calldataUrl = `${this.GRAPH_API_URL}/${chainName}/helper/calldata`;
+        const calldataUrl = `${this.GRAPH_API_URL}/${chain.chain_name}/helper/calldata`;
         const calldata = await fetch(calldataUrl, {
             method: "POST",
             headers: {
@@ -301,16 +348,88 @@ export class Router {
             },
             body: JSON.stringify(calldataParams),
         }).then((response) => response.json());
-        if (chainName == "starknet") {
+
+        if (chain.chain_id == 23448594291968336) {
             return {
-                contractAddress: this.STARKNET_ROUTER_ADDRESS,
+                contractAddress: chain.router_address,
                 entrypoint: "swap",
                 calldata: calldata,
             };
-        } else if (chainName == "scroll" || chainName == "base") {
-            return calldata;
-        } else {
-            throw new Error("Invalid chain ID");
+        }else {
+            return calldata
+        }
+    }
+
+    /**
+     * Builds a route and calldata out of the route response
+     * @param inputAmount: Amount to swap, formatted
+     * @param tokenInAddress: Token to swap from
+     * @param tokenOutAddress: Token to swap to
+     * @param slippage: Slippage percentage (1 = 1%)
+     * @param destination: Address to receive the tokens
+     * @param chainId: Chain ID
+     * @param options: Optional parameters
+     * @returns Route and calldata response
+     * @throws Error if the chain is not supported
+     */
+    async buildRouteAndCalldata(
+        inputAmount: AmountType,
+        tokenInAddress: string,
+        tokenOutAddress: string,
+        slippage: number,
+        destination: string,
+        chainId: number,
+        options?: Partial<RouteOverrides>,
+    ): Promise<Call | any> {     
+        const chain = this.supportedChains.find(
+                (chain) => chain.chain_id == chainId,
+            );
+        if (!chain) {
+            throw new Error("Chain not supported");
+        }
+    
+    
+        const amount = inputAmount.toString();
+        const routeParams: RouteExecuteParams = {
+            amount,
+            tokenInAddress,
+            tokenOutAddress,
+            slippage,
+            destination,
+        };
+
+        // Add optional parameters
+        for (const [key, value] of Object.entries(options ?? {})) {
+            if (key == "excludeProtocols") {
+                routeParams.excludeProtocols = (value as ProtocolId[]).join(
+                    ",",
+                );
+                continue;
+            }
+            routeParams[key as any] = value;
+        }
+    
+
+        const calldataUrl = buildRouteUrl(
+            `${this.apiUrl}/${chain.chain_name}/calldata`,
+            routeParams,
+        );
+        const calldataResponse = await fetch(calldataUrl, {
+            headers: buildHeaders(this.apiKey),
+        }).then((response) => response.json());
+     
+
+        if (chain.chain_id == 23448594291968336) {
+            return {
+                route: calldataResponse.route,
+                calldata: {
+                contractAddress: chain.router_address,
+                entrypoint: "swap",
+                calldata: calldataResponse.calldata,
+                }
+            };
+        }else {
+            return calldataResponse
         }
     }
 
@@ -321,15 +440,29 @@ export class Router {
      * @param receiverAddress: Address to receive the tokens
      */
     async buildBatchTransaction(
-        inputAmounts: BigNumber[],
+        inputAmounts: AmountType[],
         tokenInAddresses: string[],
         tokenOutAddresses: string[],
         slippage: number,
         destination: string,
         chainName: string,
         options?: Partial<RouteOverrides>,
-    ): Promise<Call | any> {
-        const amounts = inputAmounts.map((amount) => amount.toHexString());
+        chainId?: number,
+    ): Promise<Call[] | any> {
+        let chain;
+        if (chainId) {
+            chain = this.supportedChains.find(
+                (chain) => chain.chain_id == chainId,
+            );
+        } else {
+            chain = this.supportedChains.find(
+                (chain) => chain.chain_name == chainName,
+            );
+        }
+        if (!chain) {
+            throw new Error("Chain not supported");
+        }
+        const amounts = inputAmounts.map((amount) => amount.toString());
         const routeParams: RouteExecuteBatchParams = {
             amounts,
             tokenInAddresses,
@@ -350,17 +483,17 @@ export class Router {
         }
 
         const routeUrl = buildRouteUrl(
-            `${this.apiUrl}/${chainName}/executeBatch`,
+            `${this.apiUrl}/${chain.chain_name}/executeBatch`,
             routeParams,
         );
         const calldata = await fetch(routeUrl, {
             headers: buildHeaders(this.apiKey),
         }).then((response) => response.json());
 
-        if (chainName == "starknet") {
+        if (chain.chain_id == 23448594291968336) {
             const swapCalls = calldata.map((call: any) => {
                 return {
-                    contractAddress: this.STARKNET_ROUTER_ADDRESS,
+                    contractAddress: chain.router_address,
                     entrypoint: "swap",
                     calldata: call,
                 };
@@ -376,17 +509,23 @@ export class Router {
      * @param rpcUrl RPC URL to connect to
      * @returns Contract instance
      */
-    async getContractInstance(rpcUrl: string, chainName: string) {
-        if (chainName == "scroll") {
+    async getContractInstance(rpcUrl: string, chainId?: number) {
+        const chain = this.supportedChains.find(
+            (chain) => chain.chain_id == chainId,
+        );
+        if (!chain) {
+            throw new Error("Chain not supported");
+        }
+        if (chain.chain_name == "scroll") {
             const contract = new ethers.Contract(
-                this.SCROLL_ROUTER_ADDRESS,
+                chain.router_address,
                 fibrousRouterABI,
                 new ethers.JsonRpcProvider(rpcUrl),
             );
             return contract;
-        } else if (chainName == "base") {
+        } else if (chain.chain_name != 'starknet') {
             const contract = new ethers.Contract(
-                this.BASE_ROUTER_ADDRESS,
+                chain.router_address,
                 baseRouterAbi,
                 new ethers.JsonRpcProvider(rpcUrl),
             );
@@ -397,21 +536,27 @@ export class Router {
     }
 
     /**
-     * Create a contract instance for the Scroll or Base Router with a wallet
+     * Create a contract instance for the evm router with a wallet
      * @param account Wallet to use
      * @returns Contract instance
      */
-    async getContractWAccount(account: Wallet, chainName: string) {
-        if (chainName == "scroll") {
+    async getContractWAccount(account: Wallet, chainId?: number) {
+        const chain = this.supportedChains.find(
+            (chain) => chain.chain_id == chainId,
+        );
+        if (!chain) {
+            throw new Error("Chain not supported");
+        }
+        if (chain.chain_name == "scroll") {
             const contract = new ethers.Contract(
-                this.SCROLL_ROUTER_ADDRESS,
+                chain.router_address,
                 fibrousRouterABI,
                 account,
             );
             return contract;
-        } else if (chainName == "base") {
+        } else if (chain.chain_name != 'starknet') {
             const contract = new ethers.Contract(
-                this.BASE_ROUTER_ADDRESS,
+                chain.router_address,
                 baseRouterAbi,
                 account,
             );

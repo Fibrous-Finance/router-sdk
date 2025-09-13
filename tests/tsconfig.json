@@ -1,0 +1,49 @@
+{
+    "extends": "../tsconfig.json",
+    "compilerOptions": {
+        /* Test Environment */
+        "types": ["jest"],
+        
+        /* No emit for tests */
+        "noEmit": true,
+        "declaration": false,
+        "declarationMap": false,
+        "sourceMap": false,
+
+        /* Maximum flexibility for tests */
+        "strict": false,
+        "noImplicitAny": false,
+        "noUnusedLocals": false,
+        "noUnusedParameters": false,
+        "noImplicitReturns": false,
+        "allowUnusedLabels": true,
+        "allowUnreachableCode": true,
+        "exactOptionalPropertyTypes": false,
+        "noFallthroughCasesInSwitch": false,
+
+        /* Allow any testing patterns */
+        "moduleResolution": "bundler",
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": false,
+        "resolveJsonModule": true,
+        "allowJs": true,
+        "checkJs": false,
+
+        /* Testing environment - include everything */
+        "lib": ["ES2022", "DOM", "DOM.Iterable", "WebWorker"],
+        
+        /* Skip all checks for speed and flexibility */
+        "skipLibCheck": true,
+        "skipDefaultLibCheck": true
+    },
+    "include": [
+        "**/*",
+        "../src/**/*"
+    ],
+    "exclude": [
+        "node_modules",
+        "**/dist",
+        "**/coverage"
+    ]
+} 
