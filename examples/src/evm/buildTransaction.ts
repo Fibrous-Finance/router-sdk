@@ -1,5 +1,4 @@
-// import { Router as FibrousRouter } from "fibrous-router-sdk";
-import { Router as FibrousRouter } from "../../../src";
+import { Router as FibrousRouter } from "fibrous-router-sdk";
 import {  ethers, parseUnits } from "ethers";
 import { account } from "./account";
 import { humanReadableEvmSwapCallDataLog } from "../utils/humanReadableEvmLog";
