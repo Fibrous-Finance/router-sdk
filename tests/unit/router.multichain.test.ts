@@ -18,7 +18,7 @@ describe("Router Multi-Chain Support", () => {
     it("should fetch supported tokens for any chain", async () => {
         mockFetch.mockResolvedValueOnce(createMockResponse(mockTokens));
 
-        const tokens = await router.supportedTokens("starknet");
+        const tokens = await router.supportedTokens(23448594291968336);
 
         expect(mockFetch).toHaveBeenCalledWith(
             `${router.GRAPH_API_URL}/starknet/tokens`,
@@ -31,7 +31,7 @@ describe("Router Multi-Chain Support", () => {
     it("should fetch supported protocols for any chain", async () => {
         mockFetch.mockResolvedValueOnce(createMockResponse(mockProtocols));
 
-        const protocols = await router.supportedProtocols("base");
+        const protocols = await router.supportedProtocols(8453);
 
         expect(mockFetch).toHaveBeenCalledWith(
             `${router.GRAPH_API_URL}/base/protocols`,
@@ -53,7 +53,9 @@ describe("Router Multi-Chain Support", () => {
             BigInt("1000000000000000000"),
             "0x1",
             "0x2",
-            "scroll",
+            undefined,
+            undefined,
+            534352,
         );
 
         expect(mockFetch).toHaveBeenCalledWith(
@@ -67,7 +69,7 @@ describe("Router Multi-Chain Support", () => {
         const mockToken = mockTokens[0];
         mockFetch.mockResolvedValueOnce(createMockResponse(mockToken));
 
-        const token = await router.getToken("0x1", "starknet");
+        const token = await router.getToken("0x1", 23448594291968336);
 
         expect(mockFetch).toHaveBeenCalledWith(
             `${router.GRAPH_API_URL}/starknet/tokens/0x1`,
@@ -92,7 +94,7 @@ describe("Router Multi-Chain Support", () => {
 
         mockFetch.mockResolvedValueOnce(createMockResponse(duplicateTokens));
 
-        const tokens = await router.supportedTokens("starknet");
+        const tokens = await router.supportedTokens(23448594291968336);
 
         expect(tokens.get("eth")).toEqual(mockTokens[0]);
         expect(tokens.size).toBe(2);

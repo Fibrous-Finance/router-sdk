@@ -200,7 +200,7 @@ export const createMockEvmTransaction = (): EvmTransactionData => ({
     swap_parameters: [],
 });
 
-export const supportedChains = ["starknet", "scroll", "base"] as const;
+export const supportedChains = ["starknet", "scroll", "base", "monad"] as const;
 
 // Modern Jest helpers with Context7 best practices
 export const createMockError = (

@@ -78,29 +78,33 @@ describe("Router Batch Operations", () => {
             mockFetch.mockResolvedValue(createMockResponse(mockCalldata));
 
             // Case 1: Standard request
-            const result = await router.buildBatchTransaction(
+            const result2 = await router.buildBatchTransaction(
                 [BigInt(1000), BigInt(2000)],
                 ["0x1", "0x2"],
                 ["0x3", "0x4"],
                 1,
                 "0x5",
                 "starknet",
+                undefined,
+                23448594291968336,
             );
             expect(mockFetch).toHaveBeenLastCalledWith(
-                `${router.DEFAULT_API_URL}/starknet/executeBatch?amounts=0x3e8%2C0x7d0&tokenInAddresses=0x1%2C0x2&tokenOutAddresses=0x3%2C0x4&slippage=1&destination=0x5`,
+                `${router.DEFAULT_API_URL}/starknet/executeBatch?amounts=1000%2C2000&tokenInAddresses=0x1%2C0x2&tokenOutAddresses=0x3%2C0x4&slippage=1&destination=0x5`,
                 { headers: {} },
             );
 
             // Check if result is an array of Call objects (Starknet batch)
-            if (Array.isArray(result)) {
-                expect(result).toHaveLength(2);
-                expect(result[0]).toEqual({
-                    contractAddress: router.STARKNET_ROUTER_ADDRESS,
+            if (Array.isArray(result2)) {
+                expect(result2).toHaveLength(2);
+                expect(result2[0]).toEqual({
+                    contractAddress:
+                        "0x00f6f4cf62e3c010e0ac2451cc7807b5eec19a40b0faacd00cca3914280fdf5a",
                     entrypoint: "swap",
                     calldata: ["call1"],
                 });
-                expect(result[1]).toEqual({
-                    contractAddress: router.STARKNET_ROUTER_ADDRESS,
+                expect(result2[1]).toEqual({
+                    contractAddress:
+                        "0x00f6f4cf62e3c010e0ac2451cc7807b5eec19a40b0faacd00cca3914280fdf5a",
                     entrypoint: "swap",
                     calldata: ["call2"],
                 });
@@ -119,7 +123,7 @@ describe("Router Batch Operations", () => {
                 { direct: true },
             );
             expect(mockFetch).toHaveBeenLastCalledWith(
-                `${router.DEFAULT_API_URL}/starknet/executeBatch?amounts=0x3e8&tokenInAddresses=0x1&tokenOutAddresses=0x2&slippage=2&destination=0x3&direct=true`,
+                `${router.DEFAULT_API_URL}/starknet/executeBatch?amounts=1000&tokenInAddresses=0x1&tokenOutAddresses=0x2&slippage=2&destination=0x3&direct=true`,
                 { headers: {} },
             );
         });
@@ -152,7 +156,7 @@ describe("Router Batch Operations", () => {
             );
 
             expect(mockFetch).toHaveBeenCalledWith(
-                `${router.DEFAULT_API_URL}/starknet/executeBatch?amounts=0x3e8%2C0x7d0%2C0xbb8%2C0xfa0%2C0x1388&tokenInAddresses=0x1%2C0x2%2C0x3%2C0x4%2C0x5&tokenOutAddresses=0x6&slippage=3&destination=0x7`,
+                `${router.DEFAULT_API_URL}/starknet/executeBatch?amounts=1000%2C2000%2C3000%2C4000%2C5000&tokenInAddresses=0x1%2C0x2%2C0x3%2C0x4%2C0x5&tokenOutAddresses=0x6&slippage=3&destination=0x7`,
                 { headers: {} },
             );
 
@@ -161,7 +165,7 @@ describe("Router Batch Operations", () => {
                 expect(result).toHaveLength(5);
                 result.forEach((call, index) => {
                     expect(call.contractAddress).toBe(
-                        router.STARKNET_ROUTER_ADDRESS,
+                        "0x00f6f4cf62e3c010e0ac2451cc7807b5eec19a40b0faacd00cca3914280fdf5a",
                     );
                     expect(call.entrypoint).toBe("swap");
                     expect(call.calldata).toEqual([`call${index + 1}`]);

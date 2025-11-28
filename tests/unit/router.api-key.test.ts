@@ -10,7 +10,7 @@ describe("Router API Key Handling", () => {
         const routerWithKey = new Router(undefined, "test-api-key");
         mockFetch.mockResolvedValueOnce(createMockResponse([]));
 
-        await routerWithKey.supportedTokens("starknet");
+        await routerWithKey.supportedTokens(23448594291968336);
 
         expect(mockFetch).toHaveBeenCalledWith(
             expect.stringContaining("/starknet/tokens"),
@@ -22,7 +22,7 @@ describe("Router API Key Handling", () => {
         const router = new Router();
         mockFetch.mockResolvedValueOnce(createMockResponse([]));
 
-        await router.supportedTokens("starknet");
+        await router.supportedTokens(23448594291968336);
 
         expect(mockFetch).toHaveBeenCalledWith(
             expect.stringContaining("/starknet/tokens"),
@@ -34,9 +34,9 @@ describe("Router API Key Handling", () => {
         const routerWithKey = new Router(undefined, "my-secret-key");
         mockFetch.mockResolvedValue(createMockResponse([]));
 
-        await routerWithKey.supportedTokens("base");
-        await routerWithKey.supportedProtocols("scroll");
-        await routerWithKey.getToken("0x123", "starknet");
+        await routerWithKey.supportedTokens(8453);
+        await routerWithKey.supportedProtocols(8453);
+        await routerWithKey.getToken("0x1", 23448594291968336);
 
         expect(mockFetch).toHaveBeenNthCalledWith(
             1,
@@ -45,12 +45,12 @@ describe("Router API Key Handling", () => {
         );
         expect(mockFetch).toHaveBeenNthCalledWith(
             2,
-            expect.stringContaining("/scroll/protocols"),
+            expect.stringContaining("/base/protocols"),
             { headers: { "X-API-Key": "my-secret-key" } },
         );
         expect(mockFetch).toHaveBeenNthCalledWith(
             3,
-            expect.stringContaining("/starknet/tokens/0x123"),
+            expect.stringContaining("/starknet/tokens/0x1"),
             { headers: { "X-API-Key": "my-secret-key" } },
         );
     });

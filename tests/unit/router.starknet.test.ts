@@ -23,7 +23,11 @@ describe("Router Starknet-specific Methods", () => {
             expect(approveCall).toEqual({
                 contractAddress: "0x1",
                 entrypoint: "approve",
-                calldata: [router.STARKNET_ROUTER_ADDRESS, "0x3e8", "0x0"],
+                calldata: [
+                    "0x00f6f4cf62e3c010e0ac2451cc7807b5eec19a40b0faacd00cca3914280fdf5a",
+                    "0x3e8",
+                    "0x0",
+                ],
             });
         });
 
@@ -38,7 +42,7 @@ describe("Router Starknet-specific Methods", () => {
                 contractAddress: "0xabc123",
                 entrypoint: "approve",
                 calldata: [
-                    router.STARKNET_ROUTER_ADDRESS,
+                    "0x00f6f4cf62e3c010e0ac2451cc7807b5eec19a40b0faacd00cca3914280fdf5a",
                     "0x3635c9adc5de9fffff",
                     "0x0",
                 ],
@@ -68,7 +72,7 @@ describe("Router Starknet-specific Methods", () => {
 
             if ("contractAddress" in result) {
                 expect(result.contractAddress).toBe(
-                    router.STARKNET_ROUTER_ADDRESS,
+                    "0x00f6f4cf62e3c010e0ac2451cc7807b5eec19a40b0faacd00cca3914280fdf5a",
                 );
                 expect(result.entrypoint).toBe("swap");
                 expect(result.calldata).toEqual(mockCalldata);
@@ -93,7 +97,7 @@ describe("Router Starknet-specific Methods", () => {
             expect(mockFetch).toHaveBeenNthCalledWith(
                 3, // First call is mockRoute, second is mockCalldata for case 1
                 expect.stringContaining(
-                    "route?amount=0x1388&tokenInAddress=0x1&tokenOutAddress=0x2&slippage=2&destination=0x3&direct=true",
+                    "route?amount=5000&tokenInAddress=0x1&tokenOutAddress=0x2&slippage=2&destination=0x3&direct=true",
                 ),
                 { headers: {} },
             );
