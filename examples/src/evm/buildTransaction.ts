@@ -20,9 +20,8 @@ async function main() {
     }
     // Create a new contract instance
     const account0 = account(privateKey, RPC_URL);
-    const chainId = fibrous.supportedChains.find(
-        (chain) => chain.chain_name == "hyperevm",
-    )?.chain_id;
+    const chains = await fibrous.refreshSupportedChains();
+    const chainId = chains.find(chain => chain.chain_name == "hyperevm")?.chain_id;
     if (!chainId) {
         throw new Error("Chain not supported");
     }
@@ -60,7 +59,7 @@ async function main() {
     // Call the buildTransaction method in order to build the transaction
     // slippage: The maximum acceptable slippage of the buyAmount amount.
     const slippage = 1;
-    const { route, calldata } = await fibrous.buildRouteAndCalldata(
+    const { _route, calldata } = await fibrous.buildRouteAndCalldata(
         inputAmount,
         tokenInAddress,
         tokenOutAddress,
