@@ -5,7 +5,9 @@ async function main() {
     const chainName = "starknet";
     // Create a new router instance
     const fibrous = new FibrousRouter();
-    const chainId = fibrous.supportedChains.find(chain => chain.chain_name == "starknet")?.chain_id;
+    const chainId = fibrous.supportedChains.find(
+        (chain) => chain.chain_name == "starknet",
+    )?.chain_id;
     if (!chainId) {
         throw new Error("Chain not supported");
     }
@@ -46,7 +48,6 @@ async function main() {
         chainId,
     );
     console.log("route", route);
-
 }
 
 main();

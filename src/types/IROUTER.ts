@@ -94,7 +94,10 @@ export interface IRouter {
      * @param amount Amount to approve (will be converted to hex).
      * @param tokenAddress ERC-20 token address.
      */
-    buildApproveStarknet(amount: AmountType, tokenAddress: string): Promise<Call>;
+    buildApproveStarknet(
+        amount: AmountType,
+        tokenAddress: string,
+    ): Promise<Call>;
 
     /**
      * Performs EVM approve if needed and returns the result.
@@ -195,5 +198,3 @@ export interface IRouter {
      */
     getContractWAccount(account: Wallet, chainId?: number): Promise<Contract>;
 }
-
-

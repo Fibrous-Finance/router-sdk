@@ -4,7 +4,9 @@ import { parseUnits } from "ethers";
 async function main() {
     // Create a new router instance
     const fibrous = new FibrousRouter();
-    const chainId = fibrous.supportedChains.find(chain => chain.chain_name == "hyperevm")?.chain_id;
+    const chainId = fibrous.supportedChains.find(
+        (chain) => chain.chain_name == "hyperevm",
+    )?.chain_id;
     if (!chainId) {
         throw new Error("Chain not supported");
     }
@@ -20,10 +22,10 @@ async function main() {
             throw new Error("Input token not found");
         }
         const tokenInAddress = inputToken.address;
-        const outputToken =await fibrous.getToken(
+        const outputToken = await fibrous.getToken(
             "0xb8ce59fc3717ada4c02eadf9682a9e934f625ebb",
-        chainId,
-    );
+            chainId,
+        );
         if (!outputToken) {
             throw new Error("Output token not found");
         }

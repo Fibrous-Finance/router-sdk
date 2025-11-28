@@ -37,7 +37,6 @@ export class Router implements IRouter {
             dedicatedUrl = dedicatedUrl.substring(0, dedicatedUrl.length - 1);
         this.apiUrl = dedicatedUrl ?? this.DEFAULT_API_URL;
         this.apiKey = apiKey ?? null;
-    
     }
 
     /**
@@ -293,7 +292,7 @@ export class Router implements IRouter {
         chainName: string,
         options?: Partial<RouteOverrides>,
         chainId?: number,
-    ): Promise<Call | any> {     
+    ): Promise<Call | any> {
         let chain;
         // we will keep both chainName and chainId for backward compatibility
         if (chainId) {
@@ -355,8 +354,8 @@ export class Router implements IRouter {
                 entrypoint: "swap",
                 calldata: calldata,
             };
-        }else {
-            return calldata
+        } else {
+            return calldata;
         }
     }
 
@@ -380,15 +379,14 @@ export class Router implements IRouter {
         destination: string,
         chainId: number,
         options?: Partial<RouteOverrides>,
-    ): Promise<Call | any> {     
+    ): Promise<Call | any> {
         const chain = this.supportedChains.find(
-                (chain) => chain.chain_id == chainId,
-            );
+            (chain) => chain.chain_id == chainId,
+        );
         if (!chain) {
             throw new Error("Chain not supported");
         }
-    
-    
+
         const amount = inputAmount.toString();
         const routeParams: RouteExecuteParams = {
             amount,
@@ -408,7 +406,6 @@ export class Router implements IRouter {
             }
             routeParams[key as any] = value;
         }
-    
 
         const calldataUrl = buildRouteUrl(
             `${this.apiUrl}/${chain.chain_name}/calldata`,
@@ -417,19 +414,18 @@ export class Router implements IRouter {
         const calldataResponse = await fetch(calldataUrl, {
             headers: buildHeaders(this.apiKey),
         }).then((response) => response.json());
-     
 
         if (chain.chain_id == 23448594291968336) {
             return {
                 route: calldataResponse.route,
                 calldata: {
-                contractAddress: chain.router_address,
-                entrypoint: "swap",
-                calldata: calldataResponse.calldata,
-                }
+                    contractAddress: chain.router_address,
+                    entrypoint: "swap",
+                    calldata: calldataResponse.calldata,
+                },
             };
-        }else {
-            return calldataResponse
+        } else {
+            return calldataResponse;
         }
     }
 
@@ -523,7 +519,7 @@ export class Router implements IRouter {
                 new ethers.JsonRpcProvider(rpcUrl),
             );
             return contract;
-        } else if (chain.chain_name != 'starknet') {
+        } else if (chain.chain_name != "starknet") {
             const contract = new ethers.Contract(
                 chain.router_address,
                 baseRouterAbi,
@@ -554,7 +550,7 @@ export class Router implements IRouter {
                 account,
             );
             return contract;
-        } else if (chain.chain_name != 'starknet') {
+        } else if (chain.chain_name != "starknet") {
             const contract = new ethers.Contract(
                 chain.router_address,
                 baseRouterAbi,
