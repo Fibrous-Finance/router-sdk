@@ -8,7 +8,8 @@ import { account } from "./account";
 async function main() {
     // Create a new router instance
     const fibrous = new FibrousRouter();
-    const chainId = fibrous.supportedChains.find(chain => chain.chain_name == "starknet")?.chain_id;
+    const chains = await fibrous.refreshSupportedChains();
+    const chainId = chains.find(chain => chain.chain_name == "starknet")?.chain_id;
     if (!chainId) {
         throw new Error("Chain not supported");
     }
@@ -62,7 +63,7 @@ async function main() {
         slippage,
         destination,
         "starknet", // chainName will be deprecated in the future, use chainId instead
-        {reverse: false, direct: false, excludeProtocols: []},
+        { reverse: false, direct: false, excludeProtocols: [] },
         chainId,
     );
 

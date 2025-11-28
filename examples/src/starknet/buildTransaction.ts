@@ -16,7 +16,8 @@ const DESTINATION = process.env.STARKNET_PUBLIC_KEY; // The address to receive t
 async function main() {
     // Create a new router instance
     const fibrous = new FibrousRouter();
-    const chainId = fibrous.supportedChains.find(chain => chain.chain_name == "starknet")?.chain_id;
+    const chains = await fibrous.refreshSupportedChains();
+    const chainId = chains.find(chain => chain.chain_name == "starknet")?.chain_id;
     if (!chainId) {
         throw new Error("Chain not supported");
     }
@@ -43,9 +44,9 @@ async function main() {
     //     "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d", // STRK address
     //     "starknet",
     // );
-        if (!outputToken) {
-            throw new Error("Output token not found");
-        }
+    if (!outputToken) {
+        throw new Error("Output token not found");
+    }
     const tokenInAddress = inputToken.address;
     const tokenOutAddress = outputToken.address;
     const tokenInDecimals = Number(inputToken?.decimals);
@@ -57,7 +58,7 @@ async function main() {
     // Call the buildTransaction method in order to build the transaction
     // slippage: The maximum acceptable slippage of the buyAmount amount.
     const slippage = 0.1; // 1%
-    const {route, calldata} = await fibrous.buildRouteAndCalldata(
+    const { route, calldata } = await fibrous.buildRouteAndCalldata(
         inputAmount,
         tokenInAddress,
         tokenOutAddress,
@@ -87,7 +88,9 @@ async function main() {
 
     // Type guard: Starknet chains return Call
     if ("contractAddress" in calldata && "entrypoint" in calldata) {
-        const resp = await account0.execute([approveCall, calldata],{ version: 3 });
+        const resp = await account0.execute([approveCall, calldata], {
+            version: 3,
+        });
         console.log(`https://voyager.online/tx/${resp.transaction_hash}`);
     } else {
         console.error("Invalid swap call data for Starknet transaction");

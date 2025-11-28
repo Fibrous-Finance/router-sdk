@@ -1,5 +1,5 @@
 import { Router as FibrousRouter } from "fibrous-router-sdk";
-import {  ethers, parseUnits } from "ethers";
+import { ethers, parseUnits } from "ethers";
 import { account } from "./account";
 import { humanReadableEvmSwapCallDataLog } from "../utils/humanReadableEvmLog";
 import dotenv from "dotenv";
@@ -14,19 +14,22 @@ const destination = process.env.EVM_PUBLIC_KEY;
 const privateKey = process.env.EVM_PRIVATE_KEY;
 
 async function main() {
-
     const fibrous = new FibrousRouter();
     if (!privateKey || !RPC_URL || !destination) {
         throw new Error("Missing environment variables");
     }
     // Create a new contract instance
     const account0 = account(privateKey, RPC_URL);
-    const chainId = fibrous.supportedChains.find(chain => chain.chain_name == "hyperevm")?.chain_id;
+    const chains = await fibrous.refreshSupportedChains();
+    const chainId = chains.find(chain => chain.chain_name == "hyperevm")?.chain_id;
     if (!chainId) {
         throw new Error("Chain not supported");
     }
 
-    const contractWallet = await fibrous.getContractWAccount(account0 as any, chainId);
+    const contractWallet = await fibrous.getContractWAccount(
+        account0 as any,
+        chainId,
+    );
     const provider = new ethers.JsonRpcProvider(RPC_URL);
     // Build route options
     const tokens = await fibrous.supportedTokens(chainId);
@@ -56,7 +59,7 @@ async function main() {
     // Call the buildTransaction method in order to build the transaction
     // slippage: The maximum acceptable slippage of the buyAmount amount.
     const slippage = 1;
-    const {route, calldata} = await fibrous.buildRouteAndCalldata(
+    const { _route, calldata } = await fibrous.buildRouteAndCalldata(
         inputAmount,
         tokenInAddress,
         tokenOutAddress,
@@ -88,7 +91,6 @@ async function main() {
                 }
                 let tx;
                 if (isNativeToken) {
-
                     tx = await contractWallet.swap(
                         calldata.route,
                         calldata.swap_parameters,
@@ -96,10 +98,8 @@ async function main() {
                             value: inputAmount,
                             gasPrice: feeData.gasPrice * 4n,
                         },
-                      
                     );
                 } else {
-                 
                     tx = await contractWallet.swap(
                         calldata.route,
                         calldata.swap_parameters,
@@ -109,7 +109,6 @@ async function main() {
                     );
                 }
                 await monitorTransaction(tx);
-             
             } else {
                 console.error("Invalid swap call data for EVM transaction");
             }

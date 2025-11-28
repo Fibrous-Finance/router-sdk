@@ -4,14 +4,15 @@ import {
     mockFetch,
     createMockResponse,
     createMockRoute,
+    createTestRouter,
 } from "../setup/test-setup";
 
 describe("Router Route Options and URL Building", () => {
     let router: Router;
 
     beforeEach(() => {
-        router = new Router();
         mockFetch.mockClear();
+        router = createTestRouter();
     });
 
     describe("Route Options and Overrides", () => {
@@ -19,7 +20,14 @@ describe("Router Route Options and URL Building", () => {
             const mockRoute = createMockRoute();
             mockFetch.mockResolvedValueOnce(createMockResponse(mockRoute));
 
-            await router.getBestRoute(BigInt(1000), "0x1", "0x2", "starknet");
+            await router.getBestRoute(
+                BigInt(1000),
+                "0x1",
+                "0x2",
+                undefined,
+                undefined,
+                23448594291968336,
+            );
 
             expect(mockFetch).toHaveBeenCalledWith(
                 `${router.DEFAULT_API_URL}/starknet/route?amount=1000&tokenInAddress=0x1&tokenOutAddress=0x2`,
@@ -61,14 +69,20 @@ describe("Router Route Options and URL Building", () => {
                     BigInt(1000),
                     "0x1",
                     "0x2",
-                    "starknet",
+                    undefined,
                     options,
+                    23448594291968336,
                 );
 
                 const expectedUrl = `${router.DEFAULT_API_URL}/starknet/route?amount=1000&tokenInAddress=0x1&tokenOutAddress=0x2&${expectedQuery}`;
-                expect(mockFetch).toHaveBeenCalledWith(expectedUrl, {
-                    headers: {},
-                });
+                expect(mockFetch).toHaveBeenCalledWith(
+                    expectedUrl,
+                    expect.anything(),
+                );
+                expect(mockFetch).toHaveBeenCalledWith(
+                    expect.not.stringContaining("direct=false"),
+                    expect.anything(),
+                );
             },
         );
     });
@@ -82,12 +96,13 @@ describe("Router Route Options and URL Building", () => {
                 BigInt("999999999999999999"),
                 "0xabcdef1234567890",
                 "0x1234567890abcdef",
-                "base",
+                undefined,
                 {
                     excludeProtocols: [1, 5, 10] as ProtocolId[],
                     direct: false,
                     reverse: true,
                 },
+                8453,
             );
 
             const url = mockFetch.mock.calls[0][0] as string;
@@ -95,8 +110,8 @@ describe("Router Route Options and URL Building", () => {
             expect(url).toContain("tokenInAddress=0xabcdef1234567890");
             expect(url).toContain("tokenOutAddress=0x1234567890abcdef");
             expect(url).toContain("excludeProtocols=1%2C5%2C10");
-            // Note: false values are not added to URL parameters by default
-            expect(url).not.toContain("direct=false");
+            // Note: false values ARE added to URL parameters
+            expect(url).toContain("direct=false");
             expect(url).toContain("reverse=true");
         });
     });

@@ -16,5 +16,8 @@ export const EXPLORER_MAP: EXPLORER_MAP[] = [
         chain_name: "scroll",
         explorer_url: "https://scrollscan.com/tx/",
     },
-    
+    {
+        chain_name: "monad",
+        explorer_url: "https://monadvision.com/tx/",
+    },
 ];

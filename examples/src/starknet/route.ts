@@ -2,10 +2,10 @@
 import { Router as FibrousRouter } from "../../../src";
 import { parseUnits } from "ethers";
 async function main() {
-    const chainName = "starknet";
     // Create a new router instance
     const fibrous = new FibrousRouter();
-    const chainId = fibrous.supportedChains.find(chain => chain.chain_name == "starknet")?.chain_id;
+    const chains = await fibrous.refreshSupportedChains();
+    const chainId = chains.find(chain => chain.chain_name == "starknet")?.chain_id;
     if (!chainId) {
         throw new Error("Chain not supported");
     }
@@ -37,7 +37,7 @@ async function main() {
         inputAmount,
         tokenInAddress,
         tokenOutAddress,
-        chainName, // chainName will be deprecated in the future, use chainId instead
+        "starknet", // chainName will be deprecated in the future, use chainId instead
         {
             reverse: false,
             direct: false,
@@ -46,7 +46,6 @@ async function main() {
         chainId,
     );
     console.log("route", route);
-
 }
 
 main();

@@ -19,17 +19,18 @@ import { fibrousRouterABI, erc20ABI, baseRouterAbi } from "../abis";
 import { ethers, Wallet } from "ethers";
 import { BigNumberish, Call } from "starknet";
 import { CHAIN_MAP } from "../types/";
-import { CHAIN_ID_MAP } from "../constants";
 import { IRouter } from "../types";
 
 export class Router implements IRouter {
     readonly DEFAULT_API_URL = "https://api.fibrous.finance";
     readonly GRAPH_API_URL = "https://graph.fibrous.finance";
-    public supportedChains: CHAIN_MAP[] = CHAIN_ID_MAP;
+    public supportedChains: CHAIN_MAP[] = [];
     readonly NATIVE_TOKEN_ADDRESS =
         "0x0000000000000000000000000000000000000000";
     private readonly apiUrl: string;
     private readonly apiKey: string | null;
+    private chainsLoaded = false;
+    private loadingPromise: Promise<CHAIN_MAP[]> | null = null;
 
     constructor(dedicatedUrl?: string, apiKey?: string) {
         // Trim / at the end
@@ -37,7 +38,68 @@ export class Router implements IRouter {
             dedicatedUrl = dedicatedUrl.substring(0, dedicatedUrl.length - 1);
         this.apiUrl = dedicatedUrl ?? this.DEFAULT_API_URL;
         this.apiKey = apiKey ?? null;
-    
+    }
+
+    /**
+     * Fetches the supported chains from the API and updates the local cache
+     * @returns List of supported chains
+     */
+    async refreshSupportedChains(): Promise<CHAIN_MAP[]> {
+        if (this.loadingPromise) {
+            return this.loadingPromise;
+        }
+
+        this.loadingPromise = (async () => {
+            try {
+                const response = await fetch(
+                    `${this.GRAPH_API_URL}/supported-chains`,
+                    {
+                        headers: buildHeaders(this.apiKey),
+                    },
+                );
+                if (!response.ok) {
+                    throw new Error(
+                        `Failed to fetch supported chains: ${response.status} ${response.statusText}`,
+                    );
+                }
+                const chains = (await response.json()) as CHAIN_MAP[];
+                this.supportedChains = chains;
+                this.chainsLoaded = true;
+                return chains;
+            } catch (error) {
+                console.error("Failed to fetch supported chains:", error);
+                throw error;
+            } finally {
+                this.loadingPromise = null;
+            }
+        })();
+
+        return this.loadingPromise;
+    }
+
+    private async ensureChainsLoaded(): Promise<void> {
+        if (this.chainsLoaded && this.supportedChains.length > 0) {
+            return;
+        }
+        await this.refreshSupportedChains();
+    }
+
+    private getChain(chainNameOrId: string | number): CHAIN_MAP {
+        let chain: CHAIN_MAP | undefined;
+        if (typeof chainNameOrId === "number") {
+            chain = this.supportedChains.find(
+                (c) => c.chain_id === chainNameOrId,
+            );
+        } else {
+            chain = this.supportedChains.find(
+                (c) => c.chain_name === chainNameOrId,
+            );
+        }
+
+        if (!chain) {
+            throw new Error(`Chain not supported: ${chainNameOrId}`);
+        }
+        return chain;
     }
 
     /**
@@ -57,19 +119,9 @@ export class Router implements IRouter {
         options?: Partial<RouteOverrides>,
         chainId?: number,
     ): Promise<RouteResponse> {
-        let chain;
-        if (chainId) {
-            chain = this.supportedChains.find(
-                (chain) => chain.chain_id == chainId,
-            );
-        } else {
-            chain = this.supportedChains.find(
-                (chain) => chain.chain_name == chainName,
-            );
-        }
-        if (!chain) {
-            throw new Error("Chain not supported");
-        }
+        await this.ensureChainsLoaded();
+        const chain = this.getChain(chainId ?? chainName!);
+
         // Create params object
         const routeParams: RouteParams = {
             amount,
@@ -79,17 +131,18 @@ export class Router implements IRouter {
 
         // Add optional parameters
         for (const [key, value] of Object.entries(options ?? {})) {
-            if (key == "excludeProtocols") {
+            if (key === "excludeProtocols") {
                 routeParams.excludeProtocols = (value as ProtocolId[]).join(
                     ",",
                 );
                 continue;
             }
-            routeParams[key as any] = value;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (routeParams as any)[key] = value;
         }
 
         const routeUrl = buildRouteUrl(
-            `${this.apiUrl}/${chain ? chain.chain_name : chainName}/route`,
+            `${this.apiUrl}/${chain.chain_name}/route`,
             routeParams,
         );
         return await fetch(routeUrl, {
@@ -104,6 +157,10 @@ export class Router implements IRouter {
         chainName: string,
         options?: Partial<RouteOverrides>,
     ): Promise<RouteResponse[]> {
+        await this.ensureChainsLoaded();
+        // Validate chain exists even if we use chainName directly
+        this.getChain(chainName);
+
         const routeParams: RouteParamsBatch = {
             amounts,
             tokenInAddresses,
@@ -111,12 +168,13 @@ export class Router implements IRouter {
         };
 
         for (const [key, value] of Object.entries(options ?? {})) {
-            if (key == "excludeProtocols") {
+            if (key === "excludeProtocols") {
                 routeParams.excludeProtocols = (value as ProtocolId[]).join(
                     ",",
                 );
             }
-            routeParams[key as any] = value;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (routeParams as any)[key] = value;
         }
 
         const routeUrl = buildRouteUrlBatch(
@@ -135,14 +193,13 @@ export class Router implements IRouter {
      * @param chainName Chain ID to get the supported tokens for
      * @returns Supported token list
      */
-    async supportedTokens(chainId: number): Promise<Map<string, Token>> {
-        const chain = this.supportedChains.find(
-            (chain) => chain.chain_id == chainId,
-        );
-        if (!chain) {
-            throw new Error("Chain not supported");
-        }
+    async supportedTokens(
+        chainNameOrId: string | number,
+    ): Promise<Map<string, Token>> {
+        await this.ensureChainsLoaded();
+        const chain = this.getChain(chainNameOrId);
         const chainName = chain.chain_name;
+
         const tokens: Token[] = await fetch(
             `${this.GRAPH_API_URL}/${chainName}/tokens`,
             {
@@ -169,16 +226,16 @@ export class Router implements IRouter {
      * @returns Token object
      */
 
-    async getToken(address: string, chainId: number): Promise<Token | null> {
-        const chain = this.supportedChains.find(
-            (chain) => chain.chain_id == chainId,
-        );
-        if (!chain) {
-            throw new Error("Chain not supported");
-        }
+    async getToken(
+        tokenAddress: string,
+        chainNameOrId: string | number,
+    ): Promise<Token> {
+        await this.ensureChainsLoaded();
+        const chain = this.getChain(chainNameOrId);
         const chainName = chain.chain_name;
+
         const token: Token = await fetch(
-            `${this.GRAPH_API_URL}/${chainName}/tokens/${address}`,
+            `${this.GRAPH_API_URL}/${chainName}/tokens/${tokenAddress}`,
             {
                 headers: buildHeaders(this.apiKey),
             },
@@ -190,15 +247,12 @@ export class Router implements IRouter {
      * @returns Supported protocol list
      */
     async supportedProtocols(
-        chainId: number,
+        chainNameOrId: string | number,
     ): Promise<Record<string, ProtocolId>> {
-        const chain = this.supportedChains.find(
-            (chain) => chain.chain_id == chainId,
-        );
-        if (!chain) {
-            throw new Error("Chain not supported");
-        }
+        await this.ensureChainsLoaded();
+        const chain = this.getChain(chainNameOrId);
         const chainName = chain.chain_name;
+
         const protocols: { amm_name: string; protocol: ProtocolId }[] =
             await fetch(`${this.GRAPH_API_URL}/${chainName}/protocols`, {
                 headers: buildHeaders(this.apiKey),
@@ -220,12 +274,9 @@ export class Router implements IRouter {
         amount: AmountType,
         tokenAddress: string,
     ): Promise<Call> {
-        const chain = this.supportedChains.find(
-            (chain) => chain.chain_id == 23448594291968336,
-        );
-        if (!chain) {
-            throw new Error("Starknet is not supported");
-        }
+        await this.ensureChainsLoaded();
+        const chain = this.getChain("starknet");
+
         const amountHex = "0x" + amount.toString(16);
         const approveCall = approveToERC20(
             amountHex,
@@ -248,15 +299,13 @@ export class Router implements IRouter {
         account: Wallet,
         chainId?: number,
     ): Promise<boolean> {
-        if (tokenAddress == this.NATIVE_TOKEN_ADDRESS) {
+        if (tokenAddress === this.NATIVE_TOKEN_ADDRESS) {
             return true;
         }
-        const routerAddress = this.supportedChains.find(
-            (chain) => chain.chain_id == chainId,
-        )?.router_address;
-        if (!routerAddress) {
-            throw new Error("Router address not found");
-        }
+        await this.ensureChainsLoaded();
+        const chain = this.getChain(chainId!);
+        const routerAddress = chain.router_address;
+
         const tokenContract = new ethers.Contract(
             tokenAddress,
             erc20ABI,
@@ -293,21 +342,10 @@ export class Router implements IRouter {
         chainName: string,
         options?: Partial<RouteOverrides>,
         chainId?: number,
-    ): Promise<Call | any> {     
-        let chain;
-        // we will keep both chainName and chainId for backward compatibility
-        if (chainId) {
-            chain = this.supportedChains.find(
-                (chain) => chain.chain_id == chainId,
-            );
-        } else {
-            chain = this.supportedChains.find(
-                (chain) => chain.chain_name == chainName,
-            );
-        }
-        if (!chain) {
-            throw new Error("Chain not supported");
-        }
+    ): Promise<Call | any> {
+        await this.ensureChainsLoaded();
+        const chain = this.getChain(chainId ?? chainName);
+
         const amount = inputAmount.toString();
         const routeParams: RouteExecuteParams = {
             amount,
@@ -319,13 +357,14 @@ export class Router implements IRouter {
 
         // Add optional parameters
         for (const [key, value] of Object.entries(options ?? {})) {
-            if (key == "excludeProtocols") {
+            if (key === "excludeProtocols") {
                 routeParams.excludeProtocols = (value as ProtocolId[]).join(
                     ",",
                 );
                 continue;
             }
-            routeParams[key as any] = value;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (routeParams as any)[key] = value;
         }
         const routeUrl = buildRouteUrl(
             `${this.apiUrl}/${chain.chain_name}/route`,
@@ -349,14 +388,14 @@ export class Router implements IRouter {
             body: JSON.stringify(calldataParams),
         }).then((response) => response.json());
 
-        if (chain.chain_id == 23448594291968336) {
+        if (chain.chain_name === "starknet") {
             return {
                 contractAddress: chain.router_address,
                 entrypoint: "swap",
                 calldata: calldata,
             };
-        }else {
-            return calldata
+        } else {
+            return calldata;
         }
     }
 
@@ -380,15 +419,10 @@ export class Router implements IRouter {
         destination: string,
         chainId: number,
         options?: Partial<RouteOverrides>,
-    ): Promise<Call | any> {     
-        const chain = this.supportedChains.find(
-                (chain) => chain.chain_id == chainId,
-            );
-        if (!chain) {
-            throw new Error("Chain not supported");
-        }
-    
-    
+    ): Promise<Call | any> {
+        await this.ensureChainsLoaded();
+        const chain = this.getChain(chainId);
+
         const amount = inputAmount.toString();
         const routeParams: RouteExecuteParams = {
             amount,
@@ -400,15 +434,15 @@ export class Router implements IRouter {
 
         // Add optional parameters
         for (const [key, value] of Object.entries(options ?? {})) {
-            if (key == "excludeProtocols") {
+            if (key === "excludeProtocols") {
                 routeParams.excludeProtocols = (value as ProtocolId[]).join(
                     ",",
                 );
                 continue;
             }
-            routeParams[key as any] = value;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (routeParams as any)[key] = value;
         }
-    
 
         const calldataUrl = buildRouteUrl(
             `${this.apiUrl}/${chain.chain_name}/calldata`,
@@ -417,19 +451,18 @@ export class Router implements IRouter {
         const calldataResponse = await fetch(calldataUrl, {
             headers: buildHeaders(this.apiKey),
         }).then((response) => response.json());
-     
 
-        if (chain.chain_id == 23448594291968336) {
+        if (chain.chain_name === "starknet") {
             return {
                 route: calldataResponse.route,
                 calldata: {
-                contractAddress: chain.router_address,
-                entrypoint: "swap",
-                calldata: calldataResponse.calldata,
-                }
+                    contractAddress: chain.router_address,
+                    entrypoint: "swap",
+                    calldata: calldataResponse.calldata,
+                },
             };
-        }else {
-            return calldataResponse
+        } else {
+            return calldataResponse;
         }
     }
 
@@ -449,19 +482,9 @@ export class Router implements IRouter {
         options?: Partial<RouteOverrides>,
         chainId?: number,
     ): Promise<Call[] | any> {
-        let chain;
-        if (chainId) {
-            chain = this.supportedChains.find(
-                (chain) => chain.chain_id == chainId,
-            );
-        } else {
-            chain = this.supportedChains.find(
-                (chain) => chain.chain_name == chainName,
-            );
-        }
-        if (!chain) {
-            throw new Error("Chain not supported");
-        }
+        await this.ensureChainsLoaded();
+        const chain = this.getChain(chainId ?? chainName);
+
         const amounts = inputAmounts.map((amount) => amount.toString());
         const routeParams: RouteExecuteBatchParams = {
             amounts,
@@ -473,13 +496,14 @@ export class Router implements IRouter {
 
         // Add optional parameters
         for (const [key, value] of Object.entries(options ?? {})) {
-            if (key == "excludeProtocols") {
+            if (key === "excludeProtocols") {
                 routeParams.excludeProtocols = (value as ProtocolId[]).join(
                     ",",
                 );
                 continue;
             }
-            routeParams[key as any] = value;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (routeParams as any)[key] = value;
         }
 
         const routeUrl = buildRouteUrl(
@@ -490,7 +514,8 @@ export class Router implements IRouter {
             headers: buildHeaders(this.apiKey),
         }).then((response) => response.json());
 
-        if (chain.chain_id == 23448594291968336) {
+        if (chain.chain_name === "starknet") {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const swapCalls = calldata.map((call: any) => {
                 return {
                     contractAddress: chain.router_address,
@@ -509,21 +534,21 @@ export class Router implements IRouter {
      * @param rpcUrl RPC URL to connect to
      * @returns Contract instance
      */
-    async getContractInstance(rpcUrl: string, chainId?: number) {
-        const chain = this.supportedChains.find(
-            (chain) => chain.chain_id == chainId,
-        );
-        if (!chain) {
-            throw new Error("Chain not supported");
-        }
-        if (chain.chain_name == "scroll") {
+    async getContractInstance(
+        rpcUrl: string,
+        chainId: number | string,
+    ): Promise<any> {
+        await this.ensureChainsLoaded();
+        const chain = this.getChain(chainId);
+
+        if (chain.chain_name === "scroll") {
             const contract = new ethers.Contract(
                 chain.router_address,
                 fibrousRouterABI,
                 new ethers.JsonRpcProvider(rpcUrl),
             );
             return contract;
-        } else if (chain.chain_name != 'starknet') {
+        } else if (chain.chain_name !== "starknet") {
             const contract = new ethers.Contract(
                 chain.router_address,
                 baseRouterAbi,
@@ -540,21 +565,21 @@ export class Router implements IRouter {
      * @param account Wallet to use
      * @returns Contract instance
      */
-    async getContractWAccount(account: Wallet, chainId?: number) {
-        const chain = this.supportedChains.find(
-            (chain) => chain.chain_id == chainId,
-        );
-        if (!chain) {
-            throw new Error("Chain not supported");
-        }
-        if (chain.chain_name == "scroll") {
+    async getContractWAccount(
+        account: Wallet,
+        chainId: number | string,
+    ): Promise<any> {
+        await this.ensureChainsLoaded();
+        const chain = this.getChain(chainId);
+
+        if (chain.chain_name === "scroll") {
             const contract = new ethers.Contract(
                 chain.router_address,
                 fibrousRouterABI,
                 account,
             );
             return contract;
-        } else if (chain.chain_name != 'starknet') {
+        } else if (chain.chain_name !== "starknet") {
             const contract = new ethers.Contract(
                 chain.router_address,
                 baseRouterAbi,
