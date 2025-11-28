@@ -5,13 +5,14 @@ import {
     createMockResponse,
     createMockRoute,
     createMockEvmTransaction,
+    createTestRouter,
 } from "../setup/test-setup";
 
 describe("Router EVM-specific Methods", () => {
     let router: Router;
 
     beforeEach(() => {
-        router = new Router();
+        router = createTestRouter();
         mockFetch.mockClear();
     });
 

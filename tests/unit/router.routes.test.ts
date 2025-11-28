@@ -4,14 +4,15 @@ import {
     mockFetch,
     createMockResponse,
     createMockRoute,
+    createTestRouter,
 } from "../setup/test-setup";
 
 describe("Router Route Options and URL Building", () => {
     let router: Router;
 
     beforeEach(() => {
-        router = new Router();
         mockFetch.mockClear();
+        router = createTestRouter();
     });
 
     describe("Route Options and Overrides", () => {

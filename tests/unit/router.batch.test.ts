@@ -4,13 +4,15 @@ import {
     mockFetch,
     createMockResponse,
     createMockRoute,
+    createMockEvmTransaction,
+    createTestRouter,
 } from "../setup/test-setup";
 
 describe("Router Batch Operations", () => {
     let router: Router;
 
     beforeEach(() => {
-        router = new Router();
+        router = createTestRouter();
         mockFetch.mockClear();
     });
 

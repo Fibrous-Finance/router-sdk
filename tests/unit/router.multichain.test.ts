@@ -5,14 +5,15 @@ import {
     mockTokens,
     mockProtocols,
     createMockRoute,
+    createTestRouter,
 } from "../setup/test-setup";
 
 describe("Router Multi-Chain Support", () => {
     let router: Router;
 
     beforeEach(() => {
-        router = new Router();
         mockFetch.mockClear();
+        router = createTestRouter();
     });
 
     it("should fetch supported tokens for any chain", async () => {

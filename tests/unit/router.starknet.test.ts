@@ -3,14 +3,15 @@ import {
     mockFetch,
     createMockResponse,
     createMockRoute,
+    createTestRouter,
 } from "../setup/test-setup";
 
 describe("Router Starknet-specific Methods", () => {
     let router: Router;
 
     beforeEach(() => {
-        router = new Router();
         mockFetch.mockClear();
+        router = createTestRouter();
     });
 
     describe("Starknet Approve", () => {
