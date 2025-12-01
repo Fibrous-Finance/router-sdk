@@ -59,7 +59,7 @@ async function main() {
     // Call the buildTransaction method in order to build the transaction
     // slippage: The maximum acceptable slippage of the buyAmount amount.
     const slippage = 1;
-    const { _route, calldata } = await fibrous.buildRouteAndCalldata(
+    const { route, calldata } = await fibrous.buildRouteAndCalldata(
         inputAmount,
         tokenInAddress,
         tokenOutAddress,
