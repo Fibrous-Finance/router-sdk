@@ -1,5 +1,4 @@
-// import { Router as FibrousRouter } from "fibrous-router-sdk";
-import { Router as FibrousRouter } from "../../../src";
+import { Router as FibrousRouter } from "fibrous-router-sdk";
 import { parseUnits } from "ethers";
 async function main() {
     // Create a new router instance

@@ -27,7 +27,7 @@
     "setup:env": "echo 'Please create a .env file with required environment variables. Check README for details.'"
   },
   "dependencies": {
-    "fibrous-router-sdk": "^0.5.1",
+    "fibrous-router-sdk": "^0.6.3",
     "starknet": "^7.6.4",
     "tsx": "^4.20.3"
   }

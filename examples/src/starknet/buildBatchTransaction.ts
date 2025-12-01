@@ -1,5 +1,4 @@
-// import { Router as FibrousRouter } from "fibrous-router-sdk";
-import { Router as FibrousRouter } from "../../../src";
+import { Router as FibrousRouter } from "fibrous-router-sdk";
 import { Call } from "starknet";
 import { parseUnits } from "ethers";
 
