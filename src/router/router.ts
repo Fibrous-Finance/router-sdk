@@ -14,12 +14,15 @@ import {
     RouteExecuteBatchParams,
     RouteParamsBatch,
     AmountType,
+    IntegrationData,
+    constructorParams,
 } from "../types";
-import { fibrousRouterABI, erc20ABI, baseRouterAbi } from "../abis";
+import { fibrousRouterABI, erc20ABI, evmRouterAbi } from "../abis";
 import { ethers, Wallet } from "ethers";
 import { BigNumberish, Call } from "starknet";
 import { CHAIN_MAP } from "../types/";
 import { IRouter } from "../types";
+import { buildBatchTransactionParams, buildRouteAndCalldataParams, buildTransactionParams, getBestRouteBatchParams, getBestRouteParams } from "../types/router";
 
 export class Router implements IRouter {
     readonly DEFAULT_API_URL = "https://api.fibrous.finance";
@@ -29,15 +32,17 @@ export class Router implements IRouter {
         "0x0000000000000000000000000000000000000000";
     private readonly apiUrl: string;
     private readonly apiKey: string | null;
+    private readonly apiVersion: string | null;
     private chainsLoaded = false;
     private loadingPromise: Promise<CHAIN_MAP[]> | null = null;
 
-    constructor(dedicatedUrl?: string, apiKey?: string) {
+    constructor({ apiKey, dedicatedUrl, apiVersion }: constructorParams = {}) {
         // Trim / at the end
         if (dedicatedUrl && dedicatedUrl.endsWith("/"))
             dedicatedUrl = dedicatedUrl.substring(0, dedicatedUrl.length - 1);
         this.apiUrl = dedicatedUrl ?? this.DEFAULT_API_URL;
         this.apiKey = apiKey ?? null;
+        this.apiVersion = apiVersion ?? null;
     }
 
     /**
@@ -102,92 +107,6 @@ export class Router implements IRouter {
         return chain;
     }
 
-    /**
-     * Gets the best route from the API
-     * @param amount: Amount to swap, formatted
-     * @param tokenInAddress: Token to swap from
-     * @param tokenOutAddress: Token to swap to
-     * @param options: Optional parameters
-     * @returns Route response
-     * @throws Error if the API returns an error
-     */
-    async getBestRoute(
-        amount: AmountType,
-        tokenInAddress: string,
-        tokenOutAddress: string,
-        chainName?: string,
-        options?: Partial<RouteOverrides>,
-        chainId?: number,
-    ): Promise<RouteResponse> {
-        await this.ensureChainsLoaded();
-        const chain = this.getChain(chainId ?? chainName!);
-
-        // Create params object
-        const routeParams: RouteParams = {
-            amount,
-            tokenInAddress,
-            tokenOutAddress,
-        };
-
-        // Add optional parameters
-        for (const [key, value] of Object.entries(options ?? {})) {
-            if (key === "excludeProtocols") {
-                routeParams.excludeProtocols = (value as ProtocolId[]).join(
-                    ",",
-                );
-                continue;
-            }
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (routeParams as any)[key] = value;
-        }
-
-        const routeUrl = buildRouteUrl(
-            `${this.apiUrl}/${chain.chain_name}/route`,
-            routeParams,
-        );
-        return await fetch(routeUrl, {
-            headers: buildHeaders(this.apiKey),
-        }).then((response) => response.json());
-    }
-
-    async getBestRouteBatch(
-        amounts: bigint[] | string[] | number[] | BigNumberish[],
-        tokenInAddresses: string[],
-        tokenOutAddresses: string[],
-        chainName: string,
-        options?: Partial<RouteOverrides>,
-    ): Promise<RouteResponse[]> {
-        await this.ensureChainsLoaded();
-        // Validate chain exists even if we use chainName directly
-        this.getChain(chainName);
-
-        const routeParams: RouteParamsBatch = {
-            amounts,
-            tokenInAddresses,
-            tokenOutAddresses,
-        };
-
-        for (const [key, value] of Object.entries(options ?? {})) {
-            if (key === "excludeProtocols") {
-                routeParams.excludeProtocols = (value as ProtocolId[]).join(
-                    ",",
-                );
-            }
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (routeParams as any)[key] = value;
-        }
-
-        const routeUrl = buildRouteUrlBatch(
-            `${this.apiUrl}/${chainName}/routeBatch`,
-            routeParams,
-        );
-
-        const response = await fetch(routeUrl, {
-            headers: buildHeaders(this.apiKey),
-        }).then((response) => response.json());
-
-        return response;
-    }
 
     /**
      * @param chainName Chain ID to get the supported tokens for
@@ -265,11 +184,346 @@ export class Router implements IRouter {
         );
     }
 
+
     /**
-     * Builds a Starknet approve transaction
-     * @param amount: Amount to approve, formatted
-     * @param tokenAddress: Token to approve
+     * Gets the best route from the API
+     * @param amount: Amount to swap, formatted
+     * @param tokenInAddress: Token to swap from
+     * @param tokenOutAddress: Token to swap to
+     * @param options: Optional parameters
+     * @returns Route response
+     * @throws Error if the API returns an error
      */
+    async getBestRoute(
+        params: getBestRouteParams,
+    ): Promise<RouteResponse> {
+        await this.ensureChainsLoaded();
+        const chain = this.getChain(params.chainId ?? params.chainName!);
+
+        // Create params object
+        const routeParams: RouteParams = {
+            amount: params.amount,
+            tokenInAddress: params.tokenInAddress,
+            tokenOutAddress: params.tokenOutAddress,
+            integrationData: params.integrationData,
+        };
+
+        // Add optional parameters
+        for (const [key, value] of Object.entries(params.options ?? {})) {
+            if (key === "excludeProtocols") {
+                routeParams.excludeProtocols = (value as ProtocolId[]).join(
+                    ",",
+                );
+                continue;
+            }
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (routeParams as any)[key] = value;
+        }
+
+        const routeUrl = buildRouteUrl(
+            `${this.apiUrl}/${chain.chain_name}${this.apiVersion ? `/${this.apiVersion}` : ''}/route`,
+            routeParams,
+        );
+        return await fetch(routeUrl, {
+            headers: buildHeaders(this.apiKey),
+        }).then((response) => response.json());
+    }
+
+    async getBestRouteBatch(
+        params: getBestRouteBatchParams,
+    ): Promise<RouteResponse[]> {
+        await this.ensureChainsLoaded();
+        // Validate chain exists even if we use chainName directly
+        const chain = this.getChain(params.chainId ?? params.chainName!);
+
+        const routeParams: RouteParamsBatch = {
+            amounts: params.amounts,
+            tokenInAddresses: params.tokenInAddresses,
+            tokenOutAddresses: params.tokenOutAddresses,
+            integrationData: params.integrationData,
+        };
+
+        for (const [key, value] of Object.entries(params.options ?? {})) {
+            if (key === "excludeProtocols") {
+                routeParams.excludeProtocols = (value as ProtocolId[]).join(
+                    ",",
+                );
+            }
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (routeParams as any)[key] = value;
+        }
+
+        const routeUrl = buildRouteUrlBatch(
+            `${this.apiUrl}/${chain.chain_name}${this.apiVersion ? `/${this.apiVersion}` : ''}/routeBatch`,
+            routeParams,
+        );
+
+        const response = await fetch(routeUrl, {
+            headers: buildHeaders(this.apiKey),
+        }).then((response) => response.json());
+
+        return response;
+    }
+
+
+
+    /**
+     * Builds a Starknet, Scroll or Base transaction out of the route response
+     * @param route: Route response
+     * @param slippage: Slippage percentage (1 = 1%)
+     * @param receiverAddress: Address to receive the tokens
+     * @Attention: This function will be deprecated, use buildRouteAndCalldata instead
+     */
+    async buildTransaction(
+        params: buildTransactionParams,
+    ): Promise<Call | any> {
+        await this.ensureChainsLoaded();
+        const chain = this.getChain(params.chainId ?? params.chainName!);
+
+        const amount = params.inputAmount.toString();
+        const routeParams: RouteExecuteParams = {
+            amount,
+            tokenInAddress: params.tokenInAddress,
+            tokenOutAddress: params.tokenOutAddress,
+            slippage: params.slippage,
+            destination: params.destination,
+            integrationData: params.integrationData,
+        };
+
+        // Add optional parameters
+        for (const [key, value] of Object.entries(params.options ?? {})) {
+            if (key === "excludeProtocols") {
+                routeParams.excludeProtocols = (value as ProtocolId[]).join(
+                    ",",
+                );
+                continue;
+            }
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (routeParams as any)[key] = value;
+        }
+        const routeUrl = buildRouteUrl(
+            `${this.apiUrl}/${chain.chain_name}${this.apiVersion ? `/${this.apiVersion}` : ''}/route`,
+            routeParams,
+        );
+        const route = await fetch(routeUrl, {
+            headers: buildHeaders(this.apiKey),
+        }).then((response) => response.json());
+        const calldataParams = {
+            route_response: route,
+            signer: params.destination,
+            slippage: params.slippage,
+        };
+        const calldataUrl = `${this.GRAPH_API_URL}/${chain.chain_name}/helper/calldata`;
+        const calldata = await fetch(calldataUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                ...buildHeaders(this.apiKey),
+            },
+            body: JSON.stringify(calldataParams),
+        }).then((response) => response.json());
+
+        if (chain.chain_name === "starknet") {
+            return {
+                contractAddress: chain.router_address,
+                entrypoint: "swap",
+                calldata: calldata,
+            };
+        } else {
+            return calldata;
+        }
+    }
+
+    /**
+     * Builds a route and calldata out of the route response
+     * @param inputAmount: Amount to swap, formatted
+     * @param tokenInAddress: Token to swap from
+     * @param tokenOutAddress: Token to swap to
+     * @param slippage: Slippage percentage (1 = 1%)
+     * @param destination: Address to receive the tokens
+     * @param chainId: Chain ID
+     * @param options: Optional parameters
+     * @returns Route and calldata response
+     * @throws Error if the chain is not supported
+     */
+    async buildRouteAndCalldata(
+        params: buildRouteAndCalldataParams,
+    ): Promise<Call | any> {
+        await this.ensureChainsLoaded();
+        const chain = this.getChain(params.chainId ?? params.chainName!);
+
+        const amount = params.inputAmount.toString();
+        const routeParams: RouteExecuteParams = {
+            amount,
+            tokenInAddress: params.tokenInAddress,
+            tokenOutAddress: params.tokenOutAddress,
+            slippage: params.slippage,
+            destination: params.destination,
+            integrationData: params.integrationData,
+        };
+
+        // Add optional parameters
+        for (const [key, value] of Object.entries(params.options ?? {})) {
+            if (key === "excludeProtocols") {
+                routeParams.excludeProtocols = (value as ProtocolId[]).join(
+                    ",",
+                );
+                continue;
+            }
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (routeParams as any)[key] = value;
+        }
+
+        let calldataUrl = buildRouteUrl(
+            `${this.apiUrl}/${chain.chain_name}${this.apiVersion ? `/${this.apiVersion}` : ''}/routeAndCalldata`,
+            routeParams,
+        );
+
+        if(chain.chain_name === "starknet") { // for starknet, the calldata will be deleted in the future
+            calldataUrl =buildRouteUrl( `${this.apiUrl}/${chain.chain_name}/calldata`, routeParams);
+        }
+        const calldataResponse = await fetch(calldataUrl, {
+            headers: buildHeaders(this.apiKey),
+        }).then((response) => response.json());
+
+        if (chain.chain_name === "starknet") {
+            return {
+                route: calldataResponse.route,
+                calldata: {
+                    contractAddress: chain.router_address,
+                    entrypoint: "swap",
+                    calldata: calldataResponse.calldata,
+                },
+            };
+        } else {
+            return calldataResponse;
+        }
+    }
+
+    /**
+     * Builds a Batch transaction out of the route response (only on Starknet for now)
+     * @param route: Route response
+     * @param slippage: Slippage percentage (1 = 1%)
+     * @param receiverAddress: Address to receive the tokens
+     */
+    async buildBatchTransaction(
+        params: buildBatchTransactionParams,
+    ): Promise<Call[] | any> {
+        await this.ensureChainsLoaded();
+        const chain = this.getChain(params.chainId ?? params.chainName!);
+
+        const amounts = params.inputAmounts.map((amount) => amount.toString());
+        const routeParams: RouteExecuteBatchParams = {
+            amounts,
+            tokenInAddresses: params.tokenInAddresses,
+            tokenOutAddresses: params.tokenOutAddresses,
+            slippage: params.slippage,
+            destination: params.destination,
+            integrationData: params.integrationData,
+        };
+
+        // Add optional parameters
+        for (const [key, value] of Object.entries(params.options ?? {})) {
+            if (key === "excludeProtocols") {
+                routeParams.excludeProtocols = (value as ProtocolId[]).join(
+                    ",",
+                );
+                continue;
+            }
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (routeParams as any)[key] = value;
+        }
+
+        const routeUrl = buildRouteUrlBatch(
+            `${this.apiUrl}/${chain.chain_name}${this.apiVersion ? `/${this.apiVersion}` : ''}/executeBatch`,
+            routeParams,
+        );
+        const calldata = await fetch(routeUrl, {
+            headers: buildHeaders(this.apiKey),
+        }).then((response) => response.json());
+
+        if (chain.chain_name === "starknet") {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const swapCalls = calldata.map((call: any) => {
+                return {
+                    contractAddress: chain.router_address,
+                    entrypoint: "swap",
+                    calldata: call,
+                };
+            });
+            return swapCalls;
+        } else {
+            throw new Error("Invalid chain ID");
+        }
+    }
+
+    /**
+     * Create a contract instance for the Scroll or Base Router
+     * @param rpcUrl RPC URL to connect to
+     * @returns Contract instance
+     */
+    async getContractInstance(
+        rpcUrl: string,
+        chainId: number | string,
+    ): Promise<any> {
+        await this.ensureChainsLoaded();
+        const chain = this.getChain(chainId);
+
+        if (chain.chain_name === "scroll") {
+            const contract = new ethers.Contract(
+                chain.router_address,
+                fibrousRouterABI,
+                new ethers.JsonRpcProvider(rpcUrl),
+            );
+            return contract;
+        } else if (chain.chain_name !== "starknet") {
+            const contract = new ethers.Contract(
+                chain.router_address,
+                evmRouterAbi,
+                new ethers.JsonRpcProvider(rpcUrl),
+            );
+            return contract;
+        } else {
+            throw new Error("Invalid chain ID");
+        }
+    }
+
+    /**
+     * Create a contract instance for the evm router with a wallet
+     * @param account Wallet to use
+     * @returns Contract instance
+     */
+    async getContractWAccount(
+        account: Wallet,
+        chainId: number | string,
+    ): Promise<any> {
+        await this.ensureChainsLoaded();
+        const chain = this.getChain(chainId);
+
+        if (chain.chain_name === "scroll") {
+            const contract = new ethers.Contract(
+                chain.router_address,
+                fibrousRouterABI,
+                account,
+            );
+            return contract;
+        } else if (chain.chain_name !== "starknet") {
+            const contract = new ethers.Contract(
+                chain.router_address,
+                evmRouterAbi,
+                account,
+            );
+            return contract;
+        } else {
+            throw new Error("Invalid chain ID");
+        }
+    }
+
+    /**
+  * Builds a Starknet approve transaction
+  * @param amount: Amount to approve, formatted
+  * @param tokenAddress: Token to approve
+  */
     async buildApproveStarknet(
         amount: AmountType,
         tokenAddress: string,
@@ -324,270 +578,5 @@ export class Router implements IRouter {
         );
         await approveTx.wait();
         return true;
-    }
-
-    /**
-     * Builds a Starknet, Scroll or Base transaction out of the route response
-     * @param route: Route response
-     * @param slippage: Slippage percentage (1 = 1%)
-     * @param receiverAddress: Address to receive the tokens
-     * @Attention: This function will be deprecated, use buildRouteAndCalldata instead
-     */
-    async buildTransaction(
-        inputAmount: AmountType,
-        tokenInAddress: string,
-        tokenOutAddress: string,
-        slippage: number,
-        destination: string,
-        chainName: string,
-        options?: Partial<RouteOverrides>,
-        chainId?: number,
-    ): Promise<Call | any> {
-        await this.ensureChainsLoaded();
-        const chain = this.getChain(chainId ?? chainName);
-
-        const amount = inputAmount.toString();
-        const routeParams: RouteExecuteParams = {
-            amount,
-            tokenInAddress,
-            tokenOutAddress,
-            slippage,
-            destination,
-        };
-
-        // Add optional parameters
-        for (const [key, value] of Object.entries(options ?? {})) {
-            if (key === "excludeProtocols") {
-                routeParams.excludeProtocols = (value as ProtocolId[]).join(
-                    ",",
-                );
-                continue;
-            }
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (routeParams as any)[key] = value;
-        }
-        const routeUrl = buildRouteUrl(
-            `${this.apiUrl}/${chain.chain_name}/route`,
-            routeParams,
-        );
-        const route = await fetch(routeUrl, {
-            headers: buildHeaders(this.apiKey),
-        }).then((response) => response.json());
-        const calldataParams = {
-            route_response: route,
-            signer: destination,
-            slippage: slippage,
-        };
-        const calldataUrl = `${this.GRAPH_API_URL}/${chain.chain_name}/helper/calldata`;
-        const calldata = await fetch(calldataUrl, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                ...buildHeaders(this.apiKey),
-            },
-            body: JSON.stringify(calldataParams),
-        }).then((response) => response.json());
-
-        if (chain.chain_name === "starknet") {
-            return {
-                contractAddress: chain.router_address,
-                entrypoint: "swap",
-                calldata: calldata,
-            };
-        } else {
-            return calldata;
-        }
-    }
-
-    /**
-     * Builds a route and calldata out of the route response
-     * @param inputAmount: Amount to swap, formatted
-     * @param tokenInAddress: Token to swap from
-     * @param tokenOutAddress: Token to swap to
-     * @param slippage: Slippage percentage (1 = 1%)
-     * @param destination: Address to receive the tokens
-     * @param chainId: Chain ID
-     * @param options: Optional parameters
-     * @returns Route and calldata response
-     * @throws Error if the chain is not supported
-     */
-    async buildRouteAndCalldata(
-        inputAmount: AmountType,
-        tokenInAddress: string,
-        tokenOutAddress: string,
-        slippage: number,
-        destination: string,
-        chainId: number,
-        options?: Partial<RouteOverrides>,
-    ): Promise<Call | any> {
-        await this.ensureChainsLoaded();
-        const chain = this.getChain(chainId);
-
-        const amount = inputAmount.toString();
-        const routeParams: RouteExecuteParams = {
-            amount,
-            tokenInAddress,
-            tokenOutAddress,
-            slippage,
-            destination,
-        };
-
-        // Add optional parameters
-        for (const [key, value] of Object.entries(options ?? {})) {
-            if (key === "excludeProtocols") {
-                routeParams.excludeProtocols = (value as ProtocolId[]).join(
-                    ",",
-                );
-                continue;
-            }
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (routeParams as any)[key] = value;
-        }
-
-        const calldataUrl = buildRouteUrl(
-            `${this.apiUrl}/${chain.chain_name}/calldata`,
-            routeParams,
-        );
-        const calldataResponse = await fetch(calldataUrl, {
-            headers: buildHeaders(this.apiKey),
-        }).then((response) => response.json());
-
-        if (chain.chain_name === "starknet") {
-            return {
-                route: calldataResponse.route,
-                calldata: {
-                    contractAddress: chain.router_address,
-                    entrypoint: "swap",
-                    calldata: calldataResponse.calldata,
-                },
-            };
-        } else {
-            return calldataResponse;
-        }
-    }
-
-    /**
-     * Builds a Batch transaction out of the route response (only on Starknet for now)
-     * @param route: Route response
-     * @param slippage: Slippage percentage (1 = 1%)
-     * @param receiverAddress: Address to receive the tokens
-     */
-    async buildBatchTransaction(
-        inputAmounts: AmountType[],
-        tokenInAddresses: string[],
-        tokenOutAddresses: string[],
-        slippage: number,
-        destination: string,
-        chainName: string,
-        options?: Partial<RouteOverrides>,
-        chainId?: number,
-    ): Promise<Call[] | any> {
-        await this.ensureChainsLoaded();
-        const chain = this.getChain(chainId ?? chainName);
-
-        const amounts = inputAmounts.map((amount) => amount.toString());
-        const routeParams: RouteExecuteBatchParams = {
-            amounts,
-            tokenInAddresses,
-            tokenOutAddresses,
-            slippage,
-            destination,
-        };
-
-        // Add optional parameters
-        for (const [key, value] of Object.entries(options ?? {})) {
-            if (key === "excludeProtocols") {
-                routeParams.excludeProtocols = (value as ProtocolId[]).join(
-                    ",",
-                );
-                continue;
-            }
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (routeParams as any)[key] = value;
-        }
-
-        const routeUrl = buildRouteUrl(
-            `${this.apiUrl}/${chain.chain_name}/executeBatch`,
-            routeParams,
-        );
-        const calldata = await fetch(routeUrl, {
-            headers: buildHeaders(this.apiKey),
-        }).then((response) => response.json());
-
-        if (chain.chain_name === "starknet") {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const swapCalls = calldata.map((call: any) => {
-                return {
-                    contractAddress: chain.router_address,
-                    entrypoint: "swap",
-                    calldata: call,
-                };
-            });
-            return swapCalls;
-        } else {
-            throw new Error("Invalid chain ID");
-        }
-    }
-
-    /**
-     * Create a contract instance for the Scroll or Base Router
-     * @param rpcUrl RPC URL to connect to
-     * @returns Contract instance
-     */
-    async getContractInstance(
-        rpcUrl: string,
-        chainId: number | string,
-    ): Promise<any> {
-        await this.ensureChainsLoaded();
-        const chain = this.getChain(chainId);
-
-        if (chain.chain_name === "scroll") {
-            const contract = new ethers.Contract(
-                chain.router_address,
-                fibrousRouterABI,
-                new ethers.JsonRpcProvider(rpcUrl),
-            );
-            return contract;
-        } else if (chain.chain_name !== "starknet") {
-            const contract = new ethers.Contract(
-                chain.router_address,
-                baseRouterAbi,
-                new ethers.JsonRpcProvider(rpcUrl),
-            );
-            return contract;
-        } else {
-            throw new Error("Invalid chain ID");
-        }
-    }
-
-    /**
-     * Create a contract instance for the evm router with a wallet
-     * @param account Wallet to use
-     * @returns Contract instance
-     */
-    async getContractWAccount(
-        account: Wallet,
-        chainId: number | string,
-    ): Promise<any> {
-        await this.ensureChainsLoaded();
-        const chain = this.getChain(chainId);
-
-        if (chain.chain_name === "scroll") {
-            const contract = new ethers.Contract(
-                chain.router_address,
-                fibrousRouterABI,
-                account,
-            );
-            return contract;
-        } else if (chain.chain_name !== "starknet") {
-            const contract = new ethers.Contract(
-                chain.router_address,
-                baseRouterAbi,
-                account,
-            );
-            return contract;
-        } else {
-            throw new Error("Invalid chain ID");
-        }
     }
 }

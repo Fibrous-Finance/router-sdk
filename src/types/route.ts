@@ -1,6 +1,7 @@
 import { Token } from "./token";
 import { ProtocolId } from "./enums";
 import { BigNumberish } from "starknet";
+import { IntegrationData } from "./types";
 
 export type Percent = `${string}%`;
 
@@ -14,6 +15,7 @@ export type RouteParams = {
     amount: AmountType;
     tokenInAddress: string;
     tokenOutAddress: string;
+    integrationData?: IntegrationData;
 } & Partial<
     Omit<RouteOverrides, "excludeProtocols"> & { excludeProtocols: string }
 >;
@@ -24,6 +26,7 @@ export type RouteExecuteParams = {
     tokenOutAddress: string;
     slippage: number;
     destination: string;
+    integrationData?: IntegrationData;
 } & Partial<
     Omit<RouteOverrides, "excludeProtocols"> & { excludeProtocols: string }
 >;
@@ -32,6 +35,7 @@ export type RouteParamsBatch = {
     amounts: AmountType[];
     tokenInAddresses: string[];
     tokenOutAddresses: string[];
+    integrationData?: IntegrationData;
 } & Partial<
     Omit<RouteOverrides, "excludeProtocols"> & { excludeProtocols: string }
 >;
@@ -42,6 +46,7 @@ export type RouteExecuteBatchParams = {
     tokenOutAddresses: string[];
     slippage: number;
     destination: string;
+    integrationData?: IntegrationData;
 } & Partial<
     Omit<RouteOverrides, "excludeProtocols"> & { excludeProtocols: string }
 >;
@@ -49,6 +54,10 @@ export type RouteExecuteBatchParams = {
 export type RouteFailure = {
     success: false;
     errorMessage: string;
+};
+type meta = {
+    apiVersion: string;
+    timestamp: string;
 };
 
 export type RouteSuccess = {
@@ -61,6 +70,7 @@ export type RouteSuccess = {
     estimatedGasUsedInUsd: string;
     route: Route[];
     time: number;
+    meta: meta;
 };
 
 export type RouteResponse = RouteFailure | RouteSuccess;

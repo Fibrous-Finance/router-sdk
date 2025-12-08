@@ -1,13 +1,13 @@
 import { Wallet, Contract } from "ethers";
-import { BigNumberish, Call } from "starknet";
+import { Call } from "starknet";
 import {
     AmountType,
     ProtocolId,
-    RouteOverrides,
     RouteResponse,
     Token,
 } from "./index";
 import { CHAIN_MAP } from "./types";
+import { buildBatchTransactionParams, buildRouteAndCalldataParams, buildTransactionParams, getBestRouteBatchParams, getBestRouteParams } from "./router";
 
 export interface IRouter {
     /**
@@ -42,12 +42,7 @@ export interface IRouter {
      * @throws Error if the chain is not supported.
      */
     getBestRoute(
-        amount: AmountType,
-        tokenInAddress: string,
-        tokenOutAddress: string,
-        chainName: string,
-        options?: Partial<RouteOverrides>,
-        chainId?: number,
+        params: getBestRouteParams,
     ): Promise<RouteResponse>;
 
     /**
@@ -60,11 +55,7 @@ export interface IRouter {
      * @returns List of route responses.
      */
     getBestRouteBatch(
-        amounts: bigint[] | string[] | number[] | BigNumberish[],
-        tokenInAddresses: string[],
-        tokenOutAddresses: string[],
-        chainName: string,
-        options?: Partial<RouteOverrides>,
+        params: getBestRouteBatchParams,
     ): Promise<RouteResponse[]>;
 
     /**
@@ -128,14 +119,7 @@ export interface IRouter {
      * @returns Starknet `Call` or EVM calldata/transaction structure.
      */
     buildTransaction(
-        inputAmount: AmountType,
-        tokenInAddress: string,
-        tokenOutAddress: string,
-        slippage: number,
-        destination: string,
-        chainName: string,
-        options?: Partial<RouteOverrides>,
-        chainId?: number,
+        params: buildTransactionParams,
     ): Promise<Call | unknown>;
 
     /**
@@ -150,13 +134,7 @@ export interface IRouter {
      * @returns Route and calldata structure (includes Starknet swap call when applicable).
      */
     buildRouteAndCalldata(
-        inputAmount: AmountType,
-        tokenInAddress: string,
-        tokenOutAddress: string,
-        slippage: number,
-        destination: string,
-        chainId: number,
-        options?: Partial<RouteOverrides>,
+        params: buildRouteAndCalldataParams,
     ): Promise<Call | unknown>;
 
     /**
@@ -172,14 +150,7 @@ export interface IRouter {
      * @returns Array of Starknet `Call`s or chain-specific payload.
      */
     buildBatchTransaction(
-        inputAmounts: AmountType[],
-        tokenInAddresses: string[],
-        tokenOutAddresses: string[],
-        slippage: number,
-        destination: string,
-        chainName: string,
-        options?: Partial<RouteOverrides>,
-        chainId?: number,
+        params: buildBatchTransactionParams,
     ): Promise<Call[] | unknown>;
 
     /**
