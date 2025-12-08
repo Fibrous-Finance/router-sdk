@@ -72,9 +72,9 @@ async function main() {
         destination: destination || account0.address,
         chainId: chainId,
         integrationData: {
-            integratorAddress: "0xAa5ccD7e94a6D5717A5C4AA34496E9e02484c9f0",
-            integratorFeePercentageBps: 100,
-            integratorSurplusPercentageBps: 0,
+            integratorAddress: process.env.INTEGRATOR_ADDRESS!,
+            integratorFeePercentageBps: Number(process.env.INTEGRATOR_FEE_PERCENTAGE_BPS!),
+            integratorSurplusPercentageBps: Number(process.env.INTEGRATOR_SURPLUS_PERCENTAGE_BPS!),
         }
     };
     const { route, calldata } = await fibrous.buildRouteAndCalldata(buildRouteAndCalldataParams);
