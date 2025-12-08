@@ -31,8 +31,7 @@ async function main() {
     const tokenOutAddress = outputToken.address;
     const tokenInDecimals = Number(inputToken.decimals);
     const inputAmount = BigInt(parseUnits("0.01", tokenInDecimals)); // 0.01 ETH
-    const reverse = false;
-    // Converting 1 ETH to STRK
+
     const getBestRouteParams: getBestRouteParams = {
         amount: inputAmount,
         tokenInAddress: tokenInAddress,
