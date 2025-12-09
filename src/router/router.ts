@@ -3,6 +3,10 @@ import {
     buildHeaders,
     buildRouteUrl,
     buildRouteUrlBatch,
+    APIError,
+    NetworkError,
+    JSONParseError,
+    ChainNotSupportedError,
 } from "../utils";
 import {
     RouteParams,
@@ -16,9 +20,12 @@ import {
     AmountType,
     IntegrationData,
     constructorParams,
+    BuildTransactionResponse,
+    RouteAndCalldataResponse,
+    EvmTransactionData,
 } from "../types";
 import { fibrousRouterABI, erc20ABI, evmRouterAbi } from "../abis";
-import { ethers, Wallet } from "ethers";
+import { ethers, Wallet, Contract } from "ethers";
 import { BigNumberish, Call } from "starknet";
 import { CHAIN_MAP } from "../types/";
 import { IRouter } from "../types";
@@ -63,8 +70,10 @@ export class Router implements IRouter {
                     },
                 );
                 if (!response.ok) {
-                    throw new Error(
+                    throw new APIError(
                         `Failed to fetch supported chains: ${response.status} ${response.statusText}`,
+                        response.status,
+                        response.statusText,
                     );
                 }
                 const chains = (await response.json()) as CHAIN_MAP[];
@@ -72,8 +81,19 @@ export class Router implements IRouter {
                 this.chainsLoaded = true;
                 return chains;
             } catch (error) {
-                console.error("Failed to fetch supported chains:", error);
-                throw error;
+                if (error instanceof APIError) {
+                    throw error;
+                }
+                if (error instanceof SyntaxError) {
+                    throw new JSONParseError(
+                        "Failed to parse supported chains response as JSON",
+                        error,
+                    );
+                }
+                throw new NetworkError(
+                    "Network request failed while fetching supported chains",
+                    error,
+                );
             } finally {
                 this.loadingPromise = null;
             }
@@ -102,7 +122,7 @@ export class Router implements IRouter {
         }
 
         if (!chain) {
-            throw new Error(`Chain not supported: ${chainNameOrId}`);
+            throw new ChainNotSupportedError(chainNameOrId);
         }
         return chain;
     }
@@ -119,23 +139,49 @@ export class Router implements IRouter {
         const chain = this.getChain(chainNameOrId);
         const chainName = chain.chain_name;
 
-        const tokens: Token[] = await fetch(
-            `${this.GRAPH_API_URL}/${chainName}/tokens`,
-            {
-                headers: buildHeaders(this.apiKey),
-            },
-        ).then((response) => response.json());
-
-        // Create a record of tokens by symbol
-        const tokensMap = new Map<string, Token>();
-        tokens.forEach((token) => {
-            const symbol = token.symbol.toLocaleLowerCase();
-            // Only add token if symbol doesn't already exist in map
-            if (!tokensMap.has(symbol)) {
-                tokensMap.set(symbol, token);
+        try {
+            const response = await fetch(
+                `${this.GRAPH_API_URL}/${chainName}/tokens`,
+                {
+                    headers: buildHeaders(this.apiKey),
+                },
+            );
+            
+            if (!response.ok) {
+                throw new APIError(
+                    `Failed to fetch supported tokens: ${response.status} ${response.statusText}`,
+                    response.status,
+                    response.statusText,
+                );
             }
-        });
-        return tokensMap;
+            
+            const tokens: Token[] = await response.json();
+
+            // Create a record of tokens by symbol
+            const tokensMap = new Map<string, Token>();
+            tokens.forEach((token) => {
+                const symbol = token.symbol.toLocaleLowerCase();
+                // Only add token if symbol doesn't already exist in map
+                if (!tokensMap.has(symbol)) {
+                    tokensMap.set(symbol, token);
+                }
+            });
+            return tokensMap;
+        } catch (error) {
+            if (error instanceof APIError) {
+                throw error;
+            }
+            if (error instanceof SyntaxError) {
+                throw new JSONParseError(
+                    "Failed to parse API response as JSON",
+                    error,
+                );
+            }
+            throw new NetworkError(
+                "Network request failed while fetching supported tokens",
+                error,
+            );
+        }
     }
 
     /**
@@ -153,13 +199,39 @@ export class Router implements IRouter {
         const chain = this.getChain(chainNameOrId);
         const chainName = chain.chain_name;
 
-        const token: Token = await fetch(
-            `${this.GRAPH_API_URL}/${chainName}/tokens/${tokenAddress}`,
-            {
-                headers: buildHeaders(this.apiKey),
-            },
-        ).then((response) => response.json());
-        return token;
+        try {
+            const response = await fetch(
+                `${this.GRAPH_API_URL}/${chainName}/tokens/${tokenAddress}`,
+                {
+                    headers: buildHeaders(this.apiKey),
+                },
+            );
+            
+            if (!response.ok) {
+                throw new APIError(
+                    `Failed to fetch token: ${response.status} ${response.statusText}`,
+                    response.status,
+                    response.statusText,
+                );
+            }
+            
+            const token: Token = await response.json();
+            return token;
+        } catch (error) {
+            if (error instanceof APIError) {
+                throw error;
+            }
+            if (error instanceof SyntaxError) {
+                throw new JSONParseError(
+                    "Failed to parse API response as JSON",
+                    error,
+                );
+            }
+            throw new NetworkError(
+                "Network request failed while fetching token",
+                error,
+            );
+        }
     }
 
     /**
@@ -172,16 +244,42 @@ export class Router implements IRouter {
         const chain = this.getChain(chainNameOrId);
         const chainName = chain.chain_name;
 
-        const protocols: { amm_name: string; protocol: ProtocolId }[] =
-            await fetch(`${this.GRAPH_API_URL}/${chainName}/protocols`, {
+        try {
+            const response = await fetch(`${this.GRAPH_API_URL}/${chainName}/protocols`, {
                 headers: buildHeaders(this.apiKey),
-            }).then((response) => response.json());
+            });
+            
+            if (!response.ok) {
+                throw new APIError(
+                    `Failed to fetch supported protocols: ${response.status} ${response.statusText}`,
+                    response.status,
+                    response.statusText,
+                );
+            }
+            
+            const protocols: { amm_name: string; protocol: ProtocolId }[] =
+                await response.json();
 
-        return protocols.reduce(
-            (acc, protocol) =>
-                Object.assign(acc, { [protocol.amm_name]: protocol.protocol }),
-            {},
-        );
+            return protocols.reduce(
+                (acc, protocol) =>
+                    Object.assign(acc, { [protocol.amm_name]: protocol.protocol }),
+                {},
+            );
+        } catch (error) {
+            if (error instanceof APIError) {
+                throw error;
+            }
+            if (error instanceof SyntaxError) {
+                throw new JSONParseError(
+                    "Failed to parse API response as JSON",
+                    error,
+                );
+            }
+            throw new NetworkError(
+                "Network request failed while fetching supported protocols",
+                error,
+            );
+        }
     }
 
 
@@ -209,24 +307,53 @@ export class Router implements IRouter {
         };
 
         // Add optional parameters
-        for (const [key, value] of Object.entries(params.options ?? {})) {
-            if (key === "excludeProtocols") {
-                routeParams.excludeProtocols = (value as ProtocolId[]).join(
-                    ",",
-                );
-                continue;
+        if (params.options) {
+            if (params.options.reverse !== undefined) {
+                routeParams.reverse = params.options.reverse;
             }
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (routeParams as any)[key] = value;
+            if (params.options.direct !== undefined) {
+                routeParams.direct = params.options.direct;
+            }
+            if (params.options.excludeProtocols) {
+                routeParams.excludeProtocols = params.options.excludeProtocols.join(",");
+            }
         }
 
         const routeUrl = buildRouteUrl(
             `${this.apiUrl}/${chain.chain_name}${this.apiVersion ? `/${this.apiVersion}` : ''}/route`,
             routeParams,
         );
-        return await fetch(routeUrl, {
-            headers: buildHeaders(this.apiKey),
-        }).then((response) => response.json());
+        
+        try {
+            const response = await fetch(routeUrl, {
+                headers: buildHeaders(this.apiKey),
+            });
+            
+            if (!response.ok) {
+                throw new APIError(
+                    `Failed to fetch route: ${response.status} ${response.statusText}`,
+                    response.status,
+                    response.statusText,
+                );
+            }
+            
+            const data = await response.json();
+            return data as RouteResponse;
+        } catch (error) {
+            if (error instanceof APIError) {
+                throw error;
+            }
+            if (error instanceof SyntaxError) {
+                throw new JSONParseError(
+                    "Failed to parse API response as JSON",
+                    error,
+                );
+            }
+            throw new NetworkError(
+                "Network request failed while fetching route",
+                error,
+            );
+        }
     }
 
     async getBestRouteBatch(
@@ -243,14 +370,16 @@ export class Router implements IRouter {
             integrationData: params.integrationData,
         };
 
-        for (const [key, value] of Object.entries(params.options ?? {})) {
-            if (key === "excludeProtocols") {
-                routeParams.excludeProtocols = (value as ProtocolId[]).join(
-                    ",",
-                );
+        if (params.options) {
+            if (params.options.reverse !== undefined) {
+                routeParams.reverse = params.options.reverse;
             }
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (routeParams as any)[key] = value;
+            if (params.options.direct !== undefined) {
+                routeParams.direct = params.options.direct;
+            }
+            if (params.options.excludeProtocols) {
+                routeParams.excludeProtocols = params.options.excludeProtocols.join(",");
+            }
         }
 
         const routeUrl = buildRouteUrlBatch(
@@ -258,11 +387,36 @@ export class Router implements IRouter {
             routeParams,
         );
 
-        const response = await fetch(routeUrl, {
-            headers: buildHeaders(this.apiKey),
-        }).then((response) => response.json());
-
-        return response;
+        try {
+            const response = await fetch(routeUrl, {
+                headers: buildHeaders(this.apiKey),
+            });
+            
+            if (!response.ok) {
+                throw new APIError(
+                    `Failed to fetch batch routes: ${response.status} ${response.statusText}`,
+                    response.status,
+                    response.statusText,
+                );
+            }
+            
+            const data = await response.json();
+            return data as RouteResponse[];
+        } catch (error) {
+            if (error instanceof APIError) {
+                throw error;
+            }
+            if (error instanceof SyntaxError) {
+                throw new JSONParseError(
+                    "Failed to parse API response as JSON",
+                    error,
+                );
+            }
+            throw new NetworkError(
+                "Network request failed while fetching batch routes",
+                error,
+            );
+        }
     }
 
 
@@ -276,7 +430,7 @@ export class Router implements IRouter {
      */
     async buildTransaction(
         params: buildTransactionParams,
-    ): Promise<Call | any> {
+    ): Promise<BuildTransactionResponse> {
         await this.ensureChainsLoaded();
         const chain = this.getChain(params.chainId ?? params.chainName!);
 
@@ -291,46 +445,103 @@ export class Router implements IRouter {
         };
 
         // Add optional parameters
-        for (const [key, value] of Object.entries(params.options ?? {})) {
-            if (key === "excludeProtocols") {
-                routeParams.excludeProtocols = (value as ProtocolId[]).join(
-                    ",",
-                );
-                continue;
+        if (params.options) {
+            if (params.options.reverse !== undefined) {
+                routeParams.reverse = params.options.reverse;
             }
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (routeParams as any)[key] = value;
+            if (params.options.direct !== undefined) {
+                routeParams.direct = params.options.direct;
+            }
+            if (params.options.excludeProtocols) {
+                routeParams.excludeProtocols = params.options.excludeProtocols.join(",");
+            }
         }
         const routeUrl = buildRouteUrl(
             `${this.apiUrl}/${chain.chain_name}${this.apiVersion ? `/${this.apiVersion}` : ''}/route`,
             routeParams,
         );
-        const route = await fetch(routeUrl, {
-            headers: buildHeaders(this.apiKey),
-        }).then((response) => response.json());
+        
+        let route: RouteResponse;
+        try {
+            const routeResponse = await fetch(routeUrl, {
+                headers: buildHeaders(this.apiKey),
+            });
+            
+            if (!routeResponse.ok) {
+                throw new APIError(
+                    `Failed to fetch route: ${routeResponse.status} ${routeResponse.statusText}`,
+                    routeResponse.status,
+                    routeResponse.statusText,
+                );
+            }
+            
+            route = await routeResponse.json();
+        } catch (error) {
+            if (error instanceof APIError) {
+                throw error;
+            }
+            if (error instanceof SyntaxError) {
+                throw new JSONParseError(
+                    "Failed to parse route response as JSON",
+                    error,
+                );
+            }
+            throw new NetworkError(
+                "Network request failed while fetching route",
+                error,
+            );
+        }
+        
         const calldataParams = {
-            route_response: route,
-            signer: params.destination,
+            route: route,
+            destination: params.destination,
             slippage: params.slippage,
         };
-        const calldataUrl = `${this.GRAPH_API_URL}/${chain.chain_name}/helper/calldata`;
-        const calldata = await fetch(calldataUrl, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                ...buildHeaders(this.apiKey),
-            },
-            body: JSON.stringify(calldataParams),
-        }).then((response) => response.json());
-
-        if (chain.chain_name === "starknet") {
-            return {
-                contractAddress: chain.router_address,
-                entrypoint: "swap",
-                calldata: calldata,
-            };
-        } else {
-            return calldata;
+        const calldataUrl = `${this.apiUrl}/${chain.chain_name}${this.apiVersion ? `/${this.apiVersion}` : ''}/calldata`;
+        
+        try {
+            const calldataResponse = await fetch(calldataUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    ...buildHeaders(this.apiKey),
+                },
+                body: JSON.stringify(calldataParams),
+            });
+            
+            if (!calldataResponse.ok) {
+                throw new APIError(
+                    `Failed to fetch calldata: ${calldataResponse.status} ${calldataResponse.statusText}`,
+                    calldataResponse.status,
+                    calldataResponse.statusText,
+                );
+            }
+            
+            const calldata = await calldataResponse.json();
+            
+            if (chain.chain_name === "starknet") {
+                return {
+                    contractAddress: chain.router_address,
+                    entrypoint: "swap",
+                    calldata: calldata,
+                };
+            } else {
+                return calldata;
+            }
+        } catch (error) {
+            if (error instanceof APIError) {
+                throw error;
+            }
+            if (error instanceof SyntaxError) {
+                throw new JSONParseError(
+                    "Failed to parse calldata response as JSON",
+                    error,
+                );
+            }
+            throw new NetworkError(
+                "Network request failed while fetching calldata",
+                error,
+            );
         }
     }
 
@@ -348,7 +559,7 @@ export class Router implements IRouter {
      */
     async buildRouteAndCalldata(
         params: buildRouteAndCalldataParams,
-    ): Promise<Call | any> {
+    ): Promise<RouteAndCalldataResponse> {
         await this.ensureChainsLoaded();
         const chain = this.getChain(params.chainId ?? params.chainName!);
 
@@ -363,15 +574,16 @@ export class Router implements IRouter {
         };
 
         // Add optional parameters
-        for (const [key, value] of Object.entries(params.options ?? {})) {
-            if (key === "excludeProtocols") {
-                routeParams.excludeProtocols = (value as ProtocolId[]).join(
-                    ",",
-                );
-                continue;
+        if (params.options) {
+            if (params.options.reverse !== undefined) {
+                routeParams.reverse = params.options.reverse;
             }
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (routeParams as any)[key] = value;
+            if (params.options.direct !== undefined) {
+                routeParams.direct = params.options.direct;
+            }
+            if (params.options.excludeProtocols) {
+                routeParams.excludeProtocols = params.options.excludeProtocols.join(",");
+            }
         }
 
         let calldataUrl = buildRouteUrl(
@@ -382,21 +594,48 @@ export class Router implements IRouter {
         if(chain.chain_name === "starknet") { // for starknet, the calldata will be deleted in the future
             calldataUrl =buildRouteUrl( `${this.apiUrl}/${chain.chain_name}/calldata`, routeParams);
         }
-        const calldataResponse = await fetch(calldataUrl, {
-            headers: buildHeaders(this.apiKey),
-        }).then((response) => response.json());
+        
+        try {
+            const calldataResponse = await fetch(calldataUrl, {
+                headers: buildHeaders(this.apiKey),
+            });
+            
+            if (!calldataResponse.ok) {
+                throw new APIError(
+                    `Failed to fetch route and calldata: ${calldataResponse.status} ${calldataResponse.statusText}`,
+                    calldataResponse.status,
+                    calldataResponse.statusText,
+                );
+            }
+            
+            const data = await calldataResponse.json();
 
-        if (chain.chain_name === "starknet") {
-            return {
-                route: calldataResponse.route,
-                calldata: {
-                    contractAddress: chain.router_address,
-                    entrypoint: "swap",
-                    calldata: calldataResponse.calldata,
-                },
-            };
-        } else {
-            return calldataResponse;
+            if (chain.chain_name === "starknet") {
+                return {
+                    route: data.route,
+                    calldata: {
+                        contractAddress: chain.router_address,
+                        entrypoint: "swap",
+                        calldata: data.calldata,
+                    },
+                };
+            } else {
+                return data;
+            }
+        } catch (error) {
+            if (error instanceof APIError) {
+                throw error;
+            }
+            if (error instanceof SyntaxError) {
+                throw new JSONParseError(
+                    "Failed to parse route and calldata response as JSON",
+                    error,
+                );
+            }
+            throw new NetworkError(
+                "Network request failed while fetching route and calldata",
+                error,
+            );
         }
     }
 
@@ -408,7 +647,7 @@ export class Router implements IRouter {
      */
     async buildBatchTransaction(
         params: buildBatchTransactionParams,
-    ): Promise<Call[] | any> {
+    ): Promise<Call[]> {
         await this.ensureChainsLoaded();
         const chain = this.getChain(params.chainId ?? params.chainName!);
 
@@ -423,37 +662,66 @@ export class Router implements IRouter {
         };
 
         // Add optional parameters
-        for (const [key, value] of Object.entries(params.options ?? {})) {
-            if (key === "excludeProtocols") {
-                routeParams.excludeProtocols = (value as ProtocolId[]).join(
-                    ",",
-                );
-                continue;
+        if (params.options) {
+            if (params.options.reverse !== undefined) {
+                routeParams.reverse = params.options.reverse;
             }
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (routeParams as any)[key] = value;
+            if (params.options.direct !== undefined) {
+                routeParams.direct = params.options.direct;
+            }
+            if (params.options.excludeProtocols) {
+                routeParams.excludeProtocols = params.options.excludeProtocols.join(",");
+            }
         }
 
         const routeUrl = buildRouteUrlBatch(
             `${this.apiUrl}/${chain.chain_name}${this.apiVersion ? `/${this.apiVersion}` : ''}/executeBatch`,
             routeParams,
         );
-        const calldata = await fetch(routeUrl, {
-            headers: buildHeaders(this.apiKey),
-        }).then((response) => response.json());
-
-        if (chain.chain_name === "starknet") {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const swapCalls = calldata.map((call: any) => {
-                return {
-                    contractAddress: chain.router_address,
-                    entrypoint: "swap",
-                    calldata: call,
-                };
+        
+        try {
+            const response = await fetch(routeUrl, {
+                headers: buildHeaders(this.apiKey),
             });
-            return swapCalls;
-        } else {
-            throw new Error("Invalid chain ID");
+            
+            if (!response.ok) {
+                throw new APIError(
+                    `Failed to fetch batch transaction: ${response.status} ${response.statusText}`,
+                    response.status,
+                    response.statusText,
+                );
+            }
+            
+            const calldata = await response.json();
+
+            if (chain.chain_name === "starknet") {
+                const swapCalls: Call[] = (calldata as string[][]).map((call: string[]) => {
+                    return {
+                        contractAddress: chain.router_address,
+                        entrypoint: "swap",
+                        calldata: call,
+                    };
+                });
+                return swapCalls;
+            } else {
+                throw new ChainNotSupportedError(
+                    `Batch transactions are only supported on Starknet, got: ${chain.chain_name}`,
+                );
+            }
+        } catch (error) {
+            if (error instanceof APIError || error instanceof ChainNotSupportedError) {
+                throw error;
+            }
+            if (error instanceof SyntaxError) {
+                throw new JSONParseError(
+                    "Failed to parse batch transaction response as JSON",
+                    error,
+                );
+            }
+            throw new NetworkError(
+                "Network request failed while fetching batch transaction",
+                error,
+            );
         }
     }
 
@@ -465,7 +733,7 @@ export class Router implements IRouter {
     async getContractInstance(
         rpcUrl: string,
         chainId: number | string,
-    ): Promise<any> {
+    ): Promise<Contract> {
         await this.ensureChainsLoaded();
         const chain = this.getChain(chainId);
 
@@ -484,7 +752,9 @@ export class Router implements IRouter {
             );
             return contract;
         } else {
-            throw new Error("Invalid chain ID");
+            throw new ChainNotSupportedError(
+                `Contract instances are not supported for Starknet, got: ${chain.chain_name}`,
+            );
         }
     }
 
@@ -496,7 +766,7 @@ export class Router implements IRouter {
     async getContractWAccount(
         account: Wallet,
         chainId: number | string,
-    ): Promise<any> {
+    ): Promise<Contract> {
         await this.ensureChainsLoaded();
         const chain = this.getChain(chainId);
 
@@ -515,7 +785,9 @@ export class Router implements IRouter {
             );
             return contract;
         } else {
-            throw new Error("Invalid chain ID");
+            throw new ChainNotSupportedError(
+                `Contract instances are not supported for Starknet, got: ${chain.chain_name}`,
+            );
         }
     }
 

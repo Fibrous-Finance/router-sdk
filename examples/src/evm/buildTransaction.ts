@@ -7,7 +7,7 @@ import { monitorTransaction } from "./utils";
 
 dotenv.config();
 // RPC URL for the EVM network, you can change this to the RPC URL of your choice
-const RPC_URL = process.env.HYPER_EVM_RPC_URL;
+const RPC_URL = process.env.RPC_URL;
 // Destination address for the swap (optional)
 const destination = process.env.EVM_PUBLIC_KEY;
 // Private key of the account that will be used to sign the transaction
@@ -37,12 +37,12 @@ async function main() {
     //         "0xb8ce59fc3717ada4c02eadf9682a9e934f625ebb",
     //     chainId,
     // );
-    const inputToken = tokens.get("hype");
+    const inputToken = tokens.get("usdc");
     if (!inputToken) {
         throw new Error("Input token not found");
     }
     const tokenInAddress = inputToken.address;
-    const outputToken = tokens.get("khype");
+    const outputToken = tokens.get("whype");
     // if you want to search for a token that is not verified, you can use the getToken method
     // const outputToken = await fibrous.getToken(
     //     "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913", // USDC address
@@ -53,7 +53,7 @@ async function main() {
     }
     const tokenOutAddress = outputToken.address;
     const tokenInDecimals = Number(inputToken.decimals);
-    const inputAmount = BigInt(parseUnits("10", tokenInDecimals)); // 5 Hype
+    const inputAmount = BigInt(parseUnits("2", tokenInDecimals)); // 5 Hype
     const isNativeToken =
         tokenInAddress == "0x0000000000000000000000000000000000000000";
     // Call the buildTransaction method in order to build the transaction

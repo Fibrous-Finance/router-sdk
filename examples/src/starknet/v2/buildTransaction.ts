@@ -30,14 +30,16 @@ async function main() {
      * recommended that use the token address directly
      * because there may be more than one token with the same symbol.
      */
-    const inputToken = await fibrous.getToken(
-        "0x033068f6539f8e6e6b131e6b2b814e6c34a5224bc66947c47dab9dfee93b35fb", // USDC address
-        chainId,
-    );
+    const inputToken = tokens.get("usdc"); // this search in only the tokens that are verified
+
+    // const inputToken = await fibrous.getToken(
+    //     "0x033068f6539f8e6e6b131e6b2b814e6c34a5224bc66947c47dab9dfee93b35fb", // USDC address
+    //     chainId,
+    // );
     if (!inputToken) {
         throw new Error("Input token not found");
     }
-    const outputToken = tokens.get("strk"); // this search in only the tokens that are verified
+    const outputToken = tokens.get("usdt"); // this search in only the tokens that are verified
     // if you want to search for a token that is not verified, you can use the getToken method
     // const outputToken = await fibrous.getToken(
     //     "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d", // STRK address

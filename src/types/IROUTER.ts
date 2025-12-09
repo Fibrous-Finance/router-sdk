@@ -60,25 +60,27 @@ export interface IRouter {
 
     /**
      * Returns the supported token list for a given chain.
-     * @param chainId Chain ID.
+     * @param chainNameOrId Chain name (e.g. "starknet", "scroll") or chain ID.
      * @returns Map of lowercased symbol -> Token.
      */
-    supportedTokens(chainId: number): Promise<Map<string, Token>>;
+    supportedTokens(chainNameOrId: string | number): Promise<Map<string, Token>>;
 
     /**
      * Returns token details by address.
-     * @param address Token address.
-     * @param chainId Chain ID.
-     * @returns `Token` if found, otherwise `null`.
+     * @param tokenAddress Token address.
+     * @param chainNameOrId Chain name (e.g. "starknet", "scroll") or chain ID.
+     * @returns Token object.
+     * @throws ChainNotSupportedError if chain is not supported.
+     * @throws APIError if token is not found or API request fails.
      */
-    getToken(address: string, chainId: number): Promise<Token | null>;
+    getToken(tokenAddress: string, chainNameOrId: string | number): Promise<Token>;
 
     /**
      * Returns supported protocols.
-     * @param chainId Chain ID.
+     * @param chainNameOrId Chain name (e.g. "starknet", "scroll") or chain ID.
      * @returns Mapping of AMM name -> protocol identifier.
      */
-    supportedProtocols(chainId: number): Promise<Record<string, ProtocolId>>;
+    supportedProtocols(chainNameOrId: string | number): Promise<Record<string, ProtocolId>>;
 
     /**
      * Builds Starknet approve call parameters.
@@ -156,16 +158,18 @@ export interface IRouter {
     /**
      * (EVM) Returns a router contract instance with a provider only.
      * @param rpcUrl JSON-RPC URL.
-     * @param chainId Chain ID.
+     * @param chainId Chain name (e.g. "starknet", "scroll") or chain ID.
      * @returns Contract instance for EVM networks (ethers.Contract).
+     * @throws ChainNotSupportedError if chain is not supported or is Starknet.
      */
-    getContractInstance(rpcUrl: string, chainId?: number): Promise<Contract>;
+    getContractInstance(rpcUrl: string, chainId: number | string): Promise<Contract>;
 
     /**
      * (EVM) Returns a router contract instance ready to sign with the given wallet.
      * @param account Wallet/signer to use.
-     * @param chainId Chain ID.
+     * @param chainId Chain name (e.g. "starknet", "scroll") or chain ID.
      * @returns Contract instance for EVM networks (ethers.Contract).
+     * @throws ChainNotSupportedError if chain is not supported or is Starknet.
      */
-    getContractWAccount(account: Wallet, chainId?: number): Promise<Contract>;
+    getContractWAccount(account: Wallet, chainId: number | string): Promise<Contract>;
 }

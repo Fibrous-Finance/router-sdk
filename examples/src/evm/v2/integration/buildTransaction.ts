@@ -1,10 +1,10 @@
-import { Router as FibrousRouter } from "../../../../src";
+import { Router as FibrousRouter } from "../../../../../src";
 import { ethers, parseUnits } from "ethers";
-import { account } from "../account";
-import { humanReadableEvmSwapCallDataLog } from "../../utils/humanReadableEvmLog";
+import { account } from "../../account";
+import { humanReadableEvmSwapCallDataLog } from "../../../utils/humanReadableEvmLog";
 import dotenv from "dotenv";
-import { monitorTransaction } from "../utils";
-import { buildRouteAndCalldataParams } from "../../../../src/types/router";
+import { monitorTransaction } from "../../utils";
+import { buildTransactionParams } from "../../../../../src/types/router";
 
 dotenv.config();
 // RPC URL for the EVM network, you can change this to the RPC URL of your choice
@@ -15,7 +15,9 @@ const destination = process.env.EVM_PUBLIC_KEY;
 const privateKey = process.env.EVM_PRIVATE_KEY;
 
 async function main() {
+    const apiKey = process.env.FIBROUS_API_KEY;
     const fibrous = new FibrousRouter({
+        apiKey,
         apiVersion: "v2",
     });
     if (!privateKey || !RPC_URL || !destination) {
@@ -24,7 +26,7 @@ async function main() {
     // Create a new contract instance
     const account0 = account(privateKey, RPC_URL);
     const chains = await fibrous.refreshSupportedChains();
-    const chainId = chains.find(chain => chain.chain_name == "hyperevm")?.chain_id;
+    const chainId = chains.find(chain => chain.chain_name == "monad")?.chain_id;
     if (!chainId) {
         throw new Error("Chain not supported");
     }
@@ -45,7 +47,7 @@ async function main() {
         throw new Error("Input token not found");
     }
     const tokenInAddress = inputToken.address;
-    const outputToken = tokens.get("whype");
+    const outputToken = tokens.get("wmon");
     // if you want to search for a token that is not verified, you can use the getToken method
     // const outputToken = await fibrous.getToken(
     //     "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913", // USDC address
@@ -56,22 +58,26 @@ async function main() {
     }
     const tokenOutAddress = outputToken.address;
     const tokenInDecimals = Number(inputToken.decimals);
-    const inputAmount = BigInt(parseUnits("2", tokenInDecimals)); // 5 Hype
+    const inputAmount = BigInt(parseUnits("4", tokenInDecimals)); // 10 usdc
     const isNativeToken =
         tokenInAddress == "0x0000000000000000000000000000000000000000";
     // Call the buildTransaction method in order to build the transaction
     // slippage: The maximum acceptable slippage of the buyAmount amount.
-    const slippage = 0.5; // 0.5%   
-    const buildRouteAndCalldataParams: buildRouteAndCalldataParams = {
+    const slippage = 1;
+    const buildTransactionParams: buildTransactionParams = {
         inputAmount: inputAmount,
         tokenInAddress: tokenInAddress,
         tokenOutAddress: tokenOutAddress,
-        slippage,
+        slippage: slippage,
         destination: destination || account0.address,
-        chainId: chainId
+        integrationData: {
+            integratorAddress: process.env.INTEGRATOR_ADDRESS!,
+            integratorFeePercentageBps: Number(process.env.INTEGRATOR_FEE_PERCENTAGE_BPS!),
+            integratorSurplusPercentageBps: Number(process.env.INTEGRATOR_SURPLUS_PERCENTAGE_BPS!),
+        },
+        chainId: chainId,
     };
-    const { route, calldata } = await fibrous.buildRouteAndCalldata(buildRouteAndCalldataParams);
-
+    const calldata = await fibrous.buildTransaction(buildTransactionParams);
 
     const approveResponse = await fibrous.buildApproveEVM(
         inputAmount,
@@ -96,20 +102,22 @@ async function main() {
                 }
                 let tx;
                 if (isNativeToken) {
-                    tx = await contractWallet.swap(
+                    tx = await contractWallet.swapIntegrator(
                         calldata.route,
                         calldata.swap_parameters,
+                        calldata.integrator_data,
                         {
                             value: inputAmount,
                             gasPrice: feeData.gasPrice * 4n,
                         },
                     );
                 } else {
-                    tx = await contractWallet.swap(
+                    tx = await contractWallet.swapIntegrator(
                         calldata.route,
                         calldata.swap_parameters,
+                        calldata.integrator_data,
                         {
-                            gasPrice: feeData.gasPrice * 2n,
+                            gasPrice: feeData.gasPrice * 4n,
                         },
                     );
                 }

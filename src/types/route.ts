@@ -128,6 +128,28 @@ export type EvmSwapParam = {
 export type EvmTransactionData = {
     route: EvmRouteParam;
     swap_parameters: EvmSwapParam[];
+    integrator_data?: string; // Integration data structure
 };
+
+export type StarknetCall = {
+    contractAddress: string;
+    entrypoint: string;
+    calldata: string[];
+};
+
+export type StarknetRouteAndCalldata = {
+    route: RouteSuccess;
+    calldata: StarknetCall;
+};
+
+export type EvmRouteAndCalldata = {
+    route: RouteSuccess;
+    calldata: EvmTransactionData;
+    integrator_data?: string; // Integration data structure
+};
+
+export type RouteAndCalldataResponse = StarknetRouteAndCalldata | EvmRouteAndCalldata;
+
+export type BuildTransactionResponse = StarknetCall | EvmTransactionData;
 
 export type AmountType = bigint | string | number | BigNumberish;
