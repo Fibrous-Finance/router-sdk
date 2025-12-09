@@ -7,26 +7,27 @@ import {
     NetworkError,
     JSONParseError,
     ChainNotSupportedError,
+    validateAmount,
+    validateSlippage,
+    validateIntegrationData,
+    validateBatchParams,
 } from "../utils";
 import {
     RouteParams,
     RouteResponse,
     Token,
     ProtocolId,
-    RouteOverrides,
     RouteExecuteParams,
     RouteExecuteBatchParams,
     RouteParamsBatch,
     AmountType,
-    IntegrationData,
     constructorParams,
     BuildTransactionResponse,
     RouteAndCalldataResponse,
-    EvmTransactionData,
 } from "../types";
 import { fibrousRouterABI, erc20ABI, evmRouterAbi } from "../abis";
 import { ethers, Wallet, Contract } from "ethers";
-import { BigNumberish, Call } from "starknet";
+import { Call } from "starknet";
 import { CHAIN_MAP } from "../types/";
 import { IRouter } from "../types";
 import { buildBatchTransactionParams, buildRouteAndCalldataParams, buildTransactionParams, getBestRouteBatchParams, getBestRouteParams } from "../types/router";
@@ -295,6 +296,12 @@ export class Router implements IRouter {
     async getBestRoute(
         params: getBestRouteParams,
     ): Promise<RouteResponse> {
+        // Validate inputs
+        validateAmount(params.amount, "amount");
+        if (params.integrationData) {
+            validateIntegrationData(params.integrationData);
+        }
+
         await this.ensureChainsLoaded();
         const chain = this.getChain(params.chainId ?? params.chainName!);
 
@@ -359,6 +366,16 @@ export class Router implements IRouter {
     async getBestRouteBatch(
         params: getBestRouteBatchParams,
     ): Promise<RouteResponse[]> {
+        // Validate inputs
+        validateBatchParams(
+            params.amounts,
+            params.tokenInAddresses,
+            params.tokenOutAddresses,
+        );
+        if (params.integrationData) {
+            validateIntegrationData(params.integrationData);
+        }
+
         await this.ensureChainsLoaded();
         // Validate chain exists even if we use chainName directly
         const chain = this.getChain(params.chainId ?? params.chainName!);
@@ -431,6 +448,13 @@ export class Router implements IRouter {
     async buildTransaction(
         params: buildTransactionParams,
     ): Promise<BuildTransactionResponse> {
+        // Validate inputs
+        validateAmount(params.inputAmount, "inputAmount");
+        validateSlippage(params.slippage, "slippage");
+        if (params.integrationData) {
+            validateIntegrationData(params.integrationData);
+        }
+
         await this.ensureChainsLoaded();
         const chain = this.getChain(params.chainId ?? params.chainName!);
 
@@ -560,6 +584,13 @@ export class Router implements IRouter {
     async buildRouteAndCalldata(
         params: buildRouteAndCalldataParams,
     ): Promise<RouteAndCalldataResponse> {
+        // Validate inputs
+        validateAmount(params.inputAmount, "inputAmount");
+        validateSlippage(params.slippage, "slippage");
+        if (params.integrationData) {
+            validateIntegrationData(params.integrationData);
+        }
+
         await this.ensureChainsLoaded();
         const chain = this.getChain(params.chainId ?? params.chainName!);
 
@@ -648,6 +679,12 @@ export class Router implements IRouter {
     async buildBatchTransaction(
         params: buildBatchTransactionParams,
     ): Promise<Call[]> {
+
+        validateSlippage(params.slippage, "slippage");
+        if (params.integrationData) {
+            validateIntegrationData(params.integrationData);
+        }
+
         await this.ensureChainsLoaded();
         const chain = this.getChain(params.chainId ?? params.chainName!);
 
@@ -800,6 +837,9 @@ export class Router implements IRouter {
         amount: AmountType,
         tokenAddress: string,
     ): Promise<Call> {
+        // Validate inputs
+        validateAmount(amount, "amount");
+
         await this.ensureChainsLoaded();
         const chain = this.getChain("starknet");
 
@@ -825,6 +865,9 @@ export class Router implements IRouter {
         account: Wallet,
         chainId?: number,
     ): Promise<boolean> {
+        // Validate inputs
+        validateAmount(amount, "amount");
+
         if (tokenAddress === this.NATIVE_TOKEN_ADDRESS) {
             return true;
         }
