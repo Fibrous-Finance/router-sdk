@@ -1,14 +1,20 @@
 {
   "name": "fibrous-router-sdk",
-  "version": "0.6.3",
+  "version": "1.0.0",
   "description": "A Javascript SDK for Fibrous Finance",
   "type": "module",
   "main": "dist/index.cjs",
   "module": "dist/index.m.js",
   "types": "dist/index.d.ts",
   "exports": {
-    "import": "./dist/index.m.js",
-    "require": "./dist/index.cjs",
+    "import": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.m.js"
+    },
+    "require": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.cjs"
+    },
     "default": "./dist/index.m.js"
   },
   "unpkg": "dist/index.umd.js",

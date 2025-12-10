@@ -1,10 +1,5 @@
-import { Router as FibrousRouter } from "fibrous-router-sdk";
+import { Router as FibrousRouter, getBestRouteParams } from "fibrous-router-sdk";
 import { parseUnits } from "ethers";
-
-// IMPORTANT: This example is for the legacy version of the Fibrous Router SDK (v0.6.x)
-// Please use the new version of the Fibrous Router SDK (v1.0.0) for the new features
-// You can find the new version of the Fibrous Router SDK in the examples/src/starknet/v2 directory
-
 async function main() {
     // Create a new router instance
     const fibrous = new FibrousRouter();
@@ -35,19 +30,20 @@ async function main() {
     const tokenOutAddress = outputToken.address;
     const tokenInDecimals = Number(inputToken.decimals);
     const inputAmount = BigInt(parseUnits("0.01", tokenInDecimals)); // 0.01 ETH
-    const reverse = false;
-    // Converting 1 ETH to STRK
-    const route = await fibrous.getBestRoute(
-        inputAmount,
-        tokenInAddress,
-        tokenOutAddress,
-        "starknet", // chainName will be deprecated in the future, use chainId instead
-        {
+
+    const getBestRouteParams: getBestRouteParams = {
+        amount: inputAmount,
+        tokenInAddress: tokenInAddress,
+        tokenOutAddress: tokenOutAddress,
+        chainId: chainId,
+        options: {
             reverse: false,
             direct: false,
             excludeProtocols: [],
         },
-        chainId,
+    };
+    const route = await fibrous.getBestRoute(
+        getBestRouteParams,
     );
     console.log("route", route);
 }

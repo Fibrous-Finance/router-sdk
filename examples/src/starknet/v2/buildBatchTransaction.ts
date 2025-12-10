@@ -1,13 +1,10 @@
-import { Router as FibrousRouter } from "fibrous-router-sdk";
+import { Router as FibrousRouter, buildBatchTransactionParams } from "fibrous-router-sdk";
 import { Call } from "starknet";
 import { parseUnits } from "ethers";
 
-import { account } from "./account";
-
-// IMPORTANT: This example is for the legacy version of the Fibrous Router SDK (v0.6.x)
-// Please use the new version of the Fibrous Router SDK (v1.0.0) for the new features
-// You can find the new version of the Fibrous Router SDK in the examples/src/starknet/v2 directory
-
+import { account } from "../account";
+import dotenv from "dotenv";
+dotenv.config();    
 async function main() {
     // Create a new router instance
     const fibrous = new FibrousRouter();
@@ -39,9 +36,9 @@ async function main() {
     const tokenInDecimals_3 = usdcToken.decimals;
 
     const inputAmounts = [
-        BigInt(parseUnits("0.001", tokenInDecimals_1)), // 0.001 ETH
-        BigInt(parseUnits("10", tokenInDecimals_2)), // 10 STRK
-        BigInt(parseUnits("5", tokenInDecimals_3)), // 5 USDC
+        BigInt(parseUnits("0.0001", Number(tokenInDecimals_1))), // 0.001 ETH
+        BigInt(parseUnits("1", Number(tokenInDecimals_2))), // 10 STRK
+        BigInt(parseUnits("5", Number(tokenInDecimals_3))), // 5 USDC
     ];
     const public_key = process.env.STARKNET_PUBLIC_KEY;
     const privateKey = process.env.STARKNET_PRIVATE_KEY;
@@ -59,16 +56,17 @@ async function main() {
         tokenInAddress_3,
     ];
     const tokenOutAddresses = [tokenOutAddress];
-    const swapCalls = await fibrous.buildBatchTransaction(
-        inputAmounts,
-        tokenInAddresses,
-        tokenOutAddresses,
-        slippage,
-        destination,
-        "starknet", // chainName will be deprecated in the future, use chainId instead
-        { reverse: false, direct: false, excludeProtocols: [] },
-        chainId,
-    );
+
+    const buildBatchTransactionParams: buildBatchTransactionParams = {
+        inputAmounts: inputAmounts,
+        tokenInAddresses: tokenInAddresses,
+        tokenOutAddresses: tokenOutAddresses,
+        slippage: slippage,
+        destination: destination,
+        chainId: chainId,
+        options: { reverse: false, direct: false, excludeProtocols: [] },
+    };
+    const swapCalls = await fibrous.buildBatchTransaction(buildBatchTransactionParams);
 
     // https://www.starknetjs.com/docs/guides/connect_account
     // If this account is based on a Cairo v2 contract (for example OpenZeppelin account 0.7.0 or later), do not forget to add the parameter "1" after the privateKey parameter

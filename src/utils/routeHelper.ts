@@ -22,7 +22,13 @@ export const buildRouteUrl = (
     const query = new URLSearchParams();
     for (const [key, value] of Object.entries(params)) {
         if (value !== undefined) {
-            query.append(key, String(value));
+            if (typeof value === "object") {
+                for (const [subKey, subValue] of Object.entries(value)) {
+                    query.append(subKey, String(subValue));
+                }
+            } else {
+                query.append(key, String(value));
+            }
         }
     }
     return `${url}?${query.toString()}`;
@@ -43,6 +49,10 @@ export const buildRouteUrlBatch = (
         if (value !== undefined) {
             if (Array.isArray(value)) {
                 query.append(key, value.join(","));
+            } else if (typeof value === "object") {
+                for (const [subKey, subValue] of Object.entries(value)) {
+                    query.append(subKey, String(subValue));
+                }
             } else {
                 query.append(key, String(value));
             }

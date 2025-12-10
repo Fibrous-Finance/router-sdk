@@ -1,13 +1,13 @@
 import { Wallet, Contract } from "ethers";
-import { BigNumberish, Call } from "starknet";
+import { Call } from "starknet";
 import {
     AmountType,
     ProtocolId,
-    RouteOverrides,
     RouteResponse,
     Token,
 } from "./index";
 import { CHAIN_MAP } from "./types";
+import { buildBatchTransactionParams, buildRouteAndCalldataParams, buildTransactionParams, getBestRouteBatchParams, getBestRouteParams } from "./router";
 
 export interface IRouter {
     /**
@@ -42,12 +42,7 @@ export interface IRouter {
      * @throws Error if the chain is not supported.
      */
     getBestRoute(
-        amount: AmountType,
-        tokenInAddress: string,
-        tokenOutAddress: string,
-        chainName: string,
-        options?: Partial<RouteOverrides>,
-        chainId?: number,
+        params: getBestRouteParams,
     ): Promise<RouteResponse>;
 
     /**
@@ -60,34 +55,32 @@ export interface IRouter {
      * @returns List of route responses.
      */
     getBestRouteBatch(
-        amounts: bigint[] | string[] | number[] | BigNumberish[],
-        tokenInAddresses: string[],
-        tokenOutAddresses: string[],
-        chainName: string,
-        options?: Partial<RouteOverrides>,
+        params: getBestRouteBatchParams,
     ): Promise<RouteResponse[]>;
 
     /**
      * Returns the supported token list for a given chain.
-     * @param chainId Chain ID.
+     * @param chainNameOrId Chain name (e.g. "starknet", "scroll") or chain ID.
      * @returns Map of lowercased symbol -> Token.
      */
-    supportedTokens(chainId: number): Promise<Map<string, Token>>;
+    supportedTokens(chainNameOrId: string | number): Promise<Map<string, Token>>;
 
     /**
      * Returns token details by address.
-     * @param address Token address.
-     * @param chainId Chain ID.
-     * @returns `Token` if found, otherwise `null`.
+     * @param tokenAddress Token address.
+     * @param chainNameOrId Chain name (e.g. "starknet", "scroll") or chain ID.
+     * @returns Token object.
+     * @throws ChainNotSupportedError if chain is not supported.
+     * @throws APIError if token is not found or API request fails.
      */
-    getToken(address: string, chainId: number): Promise<Token | null>;
+    getToken(tokenAddress: string, chainNameOrId: string | number): Promise<Token>;
 
     /**
      * Returns supported protocols.
-     * @param chainId Chain ID.
+     * @param chainNameOrId Chain name (e.g. "starknet", "scroll") or chain ID.
      * @returns Mapping of AMM name -> protocol identifier.
      */
-    supportedProtocols(chainId: number): Promise<Record<string, ProtocolId>>;
+    supportedProtocols(chainNameOrId: string | number): Promise<Record<string, ProtocolId>>;
 
     /**
      * Builds Starknet approve call parameters.
@@ -128,14 +121,7 @@ export interface IRouter {
      * @returns Starknet `Call` or EVM calldata/transaction structure.
      */
     buildTransaction(
-        inputAmount: AmountType,
-        tokenInAddress: string,
-        tokenOutAddress: string,
-        slippage: number,
-        destination: string,
-        chainName: string,
-        options?: Partial<RouteOverrides>,
-        chainId?: number,
+        params: buildTransactionParams,
     ): Promise<Call | unknown>;
 
     /**
@@ -150,13 +136,7 @@ export interface IRouter {
      * @returns Route and calldata structure (includes Starknet swap call when applicable).
      */
     buildRouteAndCalldata(
-        inputAmount: AmountType,
-        tokenInAddress: string,
-        tokenOutAddress: string,
-        slippage: number,
-        destination: string,
-        chainId: number,
-        options?: Partial<RouteOverrides>,
+        params: buildRouteAndCalldataParams,
     ): Promise<Call | unknown>;
 
     /**
@@ -172,29 +152,24 @@ export interface IRouter {
      * @returns Array of Starknet `Call`s or chain-specific payload.
      */
     buildBatchTransaction(
-        inputAmounts: AmountType[],
-        tokenInAddresses: string[],
-        tokenOutAddresses: string[],
-        slippage: number,
-        destination: string,
-        chainName: string,
-        options?: Partial<RouteOverrides>,
-        chainId?: number,
+        params: buildBatchTransactionParams,
     ): Promise<Call[] | unknown>;
 
     /**
      * (EVM) Returns a router contract instance with a provider only.
      * @param rpcUrl JSON-RPC URL.
-     * @param chainId Chain ID.
+     * @param chainId Chain name (e.g. "starknet", "scroll") or chain ID.
      * @returns Contract instance for EVM networks (ethers.Contract).
+     * @throws ChainNotSupportedError if chain is not supported or is Starknet.
      */
-    getContractInstance(rpcUrl: string, chainId?: number): Promise<Contract>;
+    getContractInstance(rpcUrl: string, chainId: number | string): Promise<Contract>;
 
     /**
      * (EVM) Returns a router contract instance ready to sign with the given wallet.
      * @param account Wallet/signer to use.
-     * @param chainId Chain ID.
+     * @param chainId Chain name (e.g. "starknet", "scroll") or chain ID.
      * @returns Contract instance for EVM networks (ethers.Contract).
+     * @throws ChainNotSupportedError if chain is not supported or is Starknet.
      */
-    getContractWAccount(account: Wallet, chainId?: number): Promise<Contract>;
+    getContractWAccount(account: Wallet, chainId: number | string): Promise<Contract>;
 }

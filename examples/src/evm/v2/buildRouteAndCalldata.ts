@@ -1,13 +1,9 @@
-import { Router as FibrousRouter } from "fibrous-router-sdk";
+import { Router as FibrousRouter, buildRouteAndCalldataParams } from "fibrous-router-sdk";
 import { ethers, parseUnits } from "ethers";
-import { account } from "./account";
-import { humanReadableEvmSwapCallDataLog } from "../utils/humanReadableEvmLog";
+import { account } from "../account";
+import { humanReadableEvmSwapCallDataLog } from "../../utils/humanReadableEvmLog";
 import dotenv from "dotenv";
-import { monitorTransaction } from "./utils";
-
-// IMPORTANT: This example is for the legacy version of the Fibrous Router SDK (v0.6.x)
-// Please use the new version of the Fibrous Router SDK (v1.0.0) for the new features
-// You can find the new version of the Fibrous Router SDK in the examples/src/evm/v2 directory
+import { monitorTransaction } from "../utils";
 
 dotenv.config();
 // RPC URL for the EVM network, you can change this to the RPC URL of your choice
@@ -18,7 +14,9 @@ const destination = process.env.EVM_PUBLIC_KEY;
 const privateKey = process.env.EVM_PRIVATE_KEY;
 
 async function main() {
-    const fibrous = new FibrousRouter();
+    const fibrous = new FibrousRouter({
+        apiVersion: "v2",
+    });
     if (!privateKey || !RPC_URL || !destination) {
         throw new Error("Missing environment variables");
     }
@@ -29,7 +27,7 @@ async function main() {
     if (!chainId) {
         throw new Error("Chain not supported");
     }
-    
+
     const contractWallet = await fibrous.getContractWAccount(
         account0 as any,
         chainId,
@@ -62,15 +60,17 @@ async function main() {
         tokenInAddress == "0x0000000000000000000000000000000000000000";
     // Call the buildTransaction method in order to build the transaction
     // slippage: The maximum acceptable slippage of the buyAmount amount.
-    const slippage = 1;
-    const { route, calldata } = await fibrous.buildRouteAndCalldata(
-        inputAmount,
-        tokenInAddress,
-        tokenOutAddress,
+    const slippage = 0.5; // 0.5%   
+    const buildRouteAndCalldataParams: buildRouteAndCalldataParams = {
+        inputAmount: inputAmount,
+        tokenInAddress: tokenInAddress,
+        tokenOutAddress: tokenOutAddress,
         slippage,
-        destination || account0.address,
-        chainId,
-    );
+        destination: destination || account0.address,
+        chainId: chainId
+    };
+    const { route, calldata } = await fibrous.buildRouteAndCalldata(buildRouteAndCalldataParams);
+
 
     const approveResponse = await fibrous.buildApproveEVM(
         inputAmount,

@@ -1,22 +1,15 @@
-    import { Router as FibrousRouter } from "fibrous-router-sdk";
+import { Router as FibrousRouter, buildRouteAndCalldataParams } from "fibrous-router-sdk";
 import { Call } from "starknet";
 import { parseUnits } from "ethers";
 
-import "dotenv/config";
+import dotenv from "dotenv";
+import { account } from "../account";
+import { humanReadableStarknetSwapCallDataLog } from "../../utils/humanReadableStarknetLog";
 
-import { account } from "./account";
-import { humanReadableStarknetSwapCallDataLog } from "../utils/humanReadableStarknetLog";
-
-
-// IMPORTANT: This example is for the legacy version of the Fibrous Router SDK (v0.6.x)
-// Please use the new version of the Fibrous Router SDK (v1.0.0) for the new features
-// You can find the new version of the Fibrous Router SDK in the examples/src/starknet/v2 directory
-
+dotenv.config();
 const PUBLIC_KEY = process.env.STARKNET_PUBLIC_KEY;
 const PRIVATE_KEY = process.env.STARKNET_PRIVATE_KEY;
 const RPC_URL = process.env.STARKNET_RPC_URL;
-const DESTINATION = process.env.STARKNET_PUBLIC_KEY; // The address to receive the tokens after the swap is completed (required)
-
 
 async function main() {
     // Create a new router instance
@@ -26,7 +19,7 @@ async function main() {
     if (!chainId) {
         throw new Error("Chain not supported");
     }
-    if (!DESTINATION || !PRIVATE_KEY || !RPC_URL || !PUBLIC_KEY) {
+    if (!PRIVATE_KEY || !RPC_URL || !PUBLIC_KEY) {
         throw new Error("Missing environment variables");
     }
 
@@ -36,14 +29,16 @@ async function main() {
      * recommended that use the token address directly
      * because there may be more than one token with the same symbol.
      */
-    const inputToken = await fibrous.getToken(
-        "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7", // ETH address
-        chainId,
-    );
+    const inputToken = tokens.get("usdc"); // this search in only the tokens that are verified
+
+    // const inputToken = await fibrous.getToken(
+    //     "0x033068f6539f8e6e6b131e6b2b814e6c34a5224bc66947c47dab9dfee93b35fb", // USDC address
+    //     chainId,
+    // );
     if (!inputToken) {
         throw new Error("Input token not found");
     }
-    const outputToken = tokens.get("strk"); // this search in only the tokens that are verified
+    const outputToken = tokens.get("usdt"); // this search in only the tokens that are verified
     // if you want to search for a token that is not verified, you can use the getToken method
     // const outputToken = await fibrous.getToken(
     //     "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d", // STRK address
@@ -58,23 +53,28 @@ async function main() {
     if (!tokenInAddress || !tokenOutAddress || !tokenInDecimals) {
         throw new Error("Token not found");
     }
-    const inputAmount = BigInt(parseUnits("0.0001", tokenInDecimals)); // 0.0001 ETH
+    const inputAmount = BigInt(parseUnits("1", tokenInDecimals)); // 1 USDC
 
     // Call the buildTransaction method in order to build the transaction
     // slippage: The maximum acceptable slippage of the buyAmount amount.
     const slippage = 0.1; // 1%
-    const { route, calldata } = await fibrous.buildRouteAndCalldata(
-        inputAmount,
-        tokenInAddress,
-        tokenOutAddress,
-        slippage,
-        DESTINATION,
-        chainId,
-        {
+    const DESTINATION = process.env.STARKNET_PUBLIC_KEY; // The address to receive the tokens after the swap is completed (required)
+
+    const buildRouteAndCalldataParams: buildRouteAndCalldataParams = {
+        inputAmount: inputAmount,
+        tokenInAddress: tokenInAddress,
+        tokenOutAddress: tokenOutAddress,
+        slippage: slippage,
+        destination: DESTINATION,
+        chainId: chainId,
+        options: {
             reverse: false,
             direct: false,
             excludeProtocols: [],
         },
+    };
+    const { route, calldata } = await fibrous.buildRouteAndCalldata(
+        buildRouteAndCalldataParams,
     );
     // https://www.starknetjs.com/docs/guides/connect_account
     // If this account is based on a Cairo v2 contract (for example OpenZeppelin account 0.7.0 or later), do not forget to add the parameter "1" after the privateKey parameter

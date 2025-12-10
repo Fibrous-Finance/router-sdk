@@ -4,7 +4,7 @@
   </a>
 </p>
 
-# Fibrous Finance SDK (v0.6.3)
+# Fibrous Finance SDK (v1.0.0)
 
 ## Installation
 
@@ -21,9 +21,19 @@ yarn add fibrous-router-sdk
 
 [Full Documentation](https://docs.fibrous.finance/)
 
-## Migration from v0.5.x
+## Migration Guides
 
-**Breaking Changes in v0.6.0**
+### Migrating from v1 to v2 API
+
+If you're upgrading to v2 API, please review our [Migration Guide: v1 → v2](./docs/MIGRATION_GUIDE.md) for detailed instructions. Key changes include:
+
+- Use `apiVersion: "v2"` in Router constructor
+- Call `refreshSupportedChains()` before using chain-related methods
+- Update all method calls to use parameter objects
+- Handle new error types (APIError, NetworkError, etc.)
+- Automatic input validation
+
+### Migrating from v0.5.x to v0.6.0
 
 If you're upgrading from v0.5.x, please review our [Migration Guide](./docs/MIGRATION_GUIDE.md) for detailed instructions on updating your code. Key changes include:
 
@@ -36,6 +46,10 @@ If you're upgrading from v0.5.x, please review our [Migration Guide](./docs/MIGR
 Check out the [Starknet examples](./examples/src/starknet/) and [Starknet README](./examples/src/starknet/README.md) for more detailed examples.
 
 Check out the [Evm examples](./examples/src/evm/) and [Evm README](./examples/src/evm/README.md) for more detailed examples.
+
+## Pre-Release Testing
+
+If you want to test pre-release versions before production, check out our [Pre-Release Testing Guide](./docs/PRE_RELEASE_TESTING.md) for detailed instructions.
 
 
 ## Contributing

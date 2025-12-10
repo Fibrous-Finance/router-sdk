@@ -1,6 +1,7 @@
 import { Token } from "./token";
 import { ProtocolId } from "./enums";
 import { BigNumberish } from "starknet";
+import { IntegrationData } from "./types";
 
 export type Percent = `${string}%`;
 
@@ -14,6 +15,7 @@ export type RouteParams = {
     amount: AmountType;
     tokenInAddress: string;
     tokenOutAddress: string;
+    integrationData?: IntegrationData;
 } & Partial<
     Omit<RouteOverrides, "excludeProtocols"> & { excludeProtocols: string }
 >;
@@ -24,6 +26,7 @@ export type RouteExecuteParams = {
     tokenOutAddress: string;
     slippage: number;
     destination: string;
+    integrationData?: IntegrationData;
 } & Partial<
     Omit<RouteOverrides, "excludeProtocols"> & { excludeProtocols: string }
 >;
@@ -32,6 +35,7 @@ export type RouteParamsBatch = {
     amounts: AmountType[];
     tokenInAddresses: string[];
     tokenOutAddresses: string[];
+    integrationData?: IntegrationData;
 } & Partial<
     Omit<RouteOverrides, "excludeProtocols"> & { excludeProtocols: string }
 >;
@@ -42,6 +46,7 @@ export type RouteExecuteBatchParams = {
     tokenOutAddresses: string[];
     slippage: number;
     destination: string;
+    integrationData?: IntegrationData;
 } & Partial<
     Omit<RouteOverrides, "excludeProtocols"> & { excludeProtocols: string }
 >;
@@ -49,6 +54,10 @@ export type RouteExecuteBatchParams = {
 export type RouteFailure = {
     success: false;
     errorMessage: string;
+};
+type meta = {
+    apiVersion: string;
+    timestamp: string;
 };
 
 export type RouteSuccess = {
@@ -61,6 +70,7 @@ export type RouteSuccess = {
     estimatedGasUsedInUsd: string;
     route: Route[];
     time: number;
+    meta: meta;
 };
 
 export type RouteResponse = RouteFailure | RouteSuccess;
@@ -118,6 +128,28 @@ export type EvmSwapParam = {
 export type EvmTransactionData = {
     route: EvmRouteParam;
     swap_parameters: EvmSwapParam[];
+    integrator_data?: string; // Integration data structure
 };
+
+export type StarknetCall = {
+    contractAddress: string;
+    entrypoint: string;
+    calldata: string[];
+};
+
+export type StarknetRouteAndCalldata = {
+    route: RouteSuccess;
+    calldata: StarknetCall;
+};
+
+export type EvmRouteAndCalldata = {
+    route: RouteSuccess;
+    calldata: EvmTransactionData;
+    integrator_data?: string; // Integration data structure
+};
+
+export type RouteAndCalldataResponse = StarknetRouteAndCalldata | EvmRouteAndCalldata;
+
+export type BuildTransactionResponse = StarknetCall | EvmTransactionData;
 
 export type AmountType = bigint | string | number | BigNumberish;

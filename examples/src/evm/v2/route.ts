@@ -1,13 +1,14 @@
-import { Router as FibrousRouter } from "fibrous-router-sdk";
+import { Router as FibrousRouter, getBestRouteParams } from "fibrous-router-sdk";
 import { parseUnits } from "ethers";
-
-// IMPORTANT: This example is for the legacy version of the Fibrous Router SDK (v0.6.x)
-// Please use the new version of the Fibrous Router SDK (v1.0.0) for the new features
-// You can find the new version of the Fibrous Router SDK in the examples/src/evm/v2 directory
-
+import dotenv from "dotenv";
+dotenv.config();
 async function main() {
     // Create a new router instance
-    const fibrous = new FibrousRouter();
+    const fibrous = new FibrousRouter(
+        {
+            apiVersion: "v2", // optional v2 is the latest version
+        }
+    );
     const chains = await fibrous.refreshSupportedChains();
     const chainId = chains.find(chain => chain.chain_name == "hyperevm")?.chain_id;
     if (!chainId) {
@@ -19,7 +20,7 @@ async function main() {
     //     "0x0000000000000000000000000000000000000000",
     //     chainId,
     // );
-    const inputToken = tokens.get("hype");
+    const inputToken = tokens.get("usdc");
     try {
         if (!inputToken) {
             throw new Error("Input token not found");
@@ -39,18 +40,22 @@ async function main() {
         //     "base",
         // );
         const tokenInDecimals = Number(inputToken.decimals);
-        const inputAmount = BigInt(parseUnits("1", tokenInDecimals)); // 1 Hype
+        const inputAmount = BigInt(parseUnits("4", tokenInDecimals)); // 4 usdc
         const reverse = false;
-        // Converting 1 Hype to usdt0
-        const route = await fibrous.getBestRoute(
-            inputAmount,
-            tokenInAddress,
-            tokenOutAddress,
-            "base", // chainName will be deprecated in the future, use chainId instead
-            {
+        
+
+        const getBestRouteParams: getBestRouteParams = {
+            amount: inputAmount,
+            tokenInAddress: tokenInAddress,
+            tokenOutAddress: tokenOutAddress,
+            chainId: chainId,
+            options: {
                 reverse,
             },
-            chainId,
+        };
+        // Converting 4 usdc to usdt0
+        const route = await fibrous.getBestRoute(
+            getBestRouteParams,
         );
         console.log("route", route);
     } catch (error) {

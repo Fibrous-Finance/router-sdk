@@ -1,10 +1,6 @@
-import { Router as FibrousRouter } from "fibrous-router-sdk";
+import { Router as FibrousRouter } from "../../../../src";
 import { parseUnits } from "ethers";
-
-// IMPORTANT: This example is for the legacy version of the Fibrous Router SDK (v0.6.x)
-// Please use the new version of the Fibrous Router SDK (v1.0.0) for the new features
-// You can find the new version of the Fibrous Router SDK in the examples/src/starknet/v2 directory
-
+import { getBestRouteBatchParams } from "../../../../src/types/router";
 async function main() {
     // Create a new router instance
     const fibrous = new FibrousRouter();
@@ -53,9 +49,9 @@ async function main() {
     }
 
     const inputAmounts = [
-        BigInt(parseUnits("0.001", tokenInDecimals_1)), // 0.001 ETH
-        BigInt(parseUnits("10", tokenInDecimals_2)), // 10 STRK
-        BigInt(parseUnits("5", tokenInDecimals_3)), // 5 USDC
+        BigInt(parseUnits("0.0001", Number(tokenInDecimals_1))), // 0.0001 ETH
+        BigInt(parseUnits("1", Number(tokenInDecimals_2))), // 1 STRK
+        BigInt(parseUnits("5", Number(tokenInDecimals_3))), // 5 USDC
     ];
 
     const tokenInAddresses = [
@@ -64,13 +60,15 @@ async function main() {
         tokenInAddress_3,
     ];
     const tokenOutAddresses = [tokenOutAddress];
-    const swapCalls = await fibrous.getBestRouteBatch(
-        inputAmounts,
-        tokenInAddresses,
-        tokenOutAddresses,
-        "starknet",
-        { reverse: false, direct: false, excludeProtocols: [] },
-    );
+
+    const getBestRouteBatchParams: getBestRouteBatchParams = {
+        amounts: inputAmounts,
+        tokenInAddresses: tokenInAddresses,
+        tokenOutAddresses: tokenOutAddresses,
+        chainId: chainId,
+        options: { reverse: false, direct: false, excludeProtocols: [] },
+    };
+    const swapCalls = await fibrous.getBestRouteBatch(getBestRouteBatchParams);
 
     console.log(swapCalls);
 }
