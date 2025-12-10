@@ -5,6 +5,10 @@ import { humanReadableEvmSwapCallDataLog } from "../utils/humanReadableEvmLog";
 import dotenv from "dotenv";
 import { monitorTransaction } from "./utils";
 
+// IMPORTANT: This example is for the legacy version of the Fibrous Router SDK (v0.6.x)
+// Please use the new version of the Fibrous Router SDK (v1.0.0) for the new features
+// You can find the new version of the Fibrous Router SDK in the examples/src/evm/v2 directory
+
 dotenv.config();
 // RPC URL for the EVM network, you can change this to the RPC URL of your choice
 const RPC_URL = process.env.RPC_URL;

@@ -1,6 +1,5 @@
-import { Router as FibrousRouter } from "../../../../src";
+import { Router as FibrousRouter, getBestRouteParams } from "fibrous-router-sdk";
 import { parseUnits } from "ethers";
-import { getBestRouteParams } from "../../../../src/types/router";
 async function main() {
     // Create a new router instance
     const fibrous = new FibrousRouter();

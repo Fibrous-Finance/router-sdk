@@ -1,6 +1,6 @@
 {
   "name": "fibrous-sdk-examples",
-  "version": "0.5.1",
+  "version": "1.0.0",
   "description": "Examples for using Fibrous SDK",
   "main": "index.js",
   "author": "kermo & zetsuboii",
@@ -27,7 +27,7 @@
     "setup:env": "echo 'Please create a .env file with required environment variables. Check README for details.'"
   },
   "dependencies": {
-    "fibrous-router-sdk": "^0.6.3",
+    "fibrous-router-sdk": "file:../fibrous-router-sdk-1.0.0-beta.1.tgz",
     "starknet": "^7.6.4",
     "tsx": "^4.20.3"
   }

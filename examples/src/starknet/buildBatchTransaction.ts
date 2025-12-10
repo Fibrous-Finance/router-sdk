@@ -4,6 +4,10 @@ import { parseUnits } from "ethers";
 
 import { account } from "./account";
 
+// IMPORTANT: This example is for the legacy version of the Fibrous Router SDK (v0.6.x)
+// Please use the new version of the Fibrous Router SDK (v1.0.0) for the new features
+// You can find the new version of the Fibrous Router SDK in the examples/src/starknet/v2 directory
+
 async function main() {
     // Create a new router instance
     const fibrous = new FibrousRouter();

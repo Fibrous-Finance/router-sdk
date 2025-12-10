@@ -1,11 +1,10 @@
-import { Router as FibrousRouter } from "../../../../src";
+import { Router as FibrousRouter, buildRouteAndCalldataParams } from "fibrous-router-sdk";
 import { Call } from "starknet";
 import { parseUnits } from "ethers";
 
 import dotenv from "dotenv";
 import { account } from "../account";
 import { humanReadableStarknetSwapCallDataLog } from "../../utils/humanReadableStarknetLog";
-import { buildRouteAndCalldataParams } from "../../../../src/types/router";
 
 dotenv.config();
 const PUBLIC_KEY = process.env.STARKNET_PUBLIC_KEY;

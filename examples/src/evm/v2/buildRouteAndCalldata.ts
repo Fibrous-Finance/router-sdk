@@ -1,10 +1,9 @@
-import { Router as FibrousRouter } from "../../../../src";
+import { Router as FibrousRouter, buildRouteAndCalldataParams } from "fibrous-router-sdk";
 import { ethers, parseUnits } from "ethers";
 import { account } from "../account";
 import { humanReadableEvmSwapCallDataLog } from "../../utils/humanReadableEvmLog";
 import dotenv from "dotenv";
 import { monitorTransaction } from "../utils";
-import { buildRouteAndCalldataParams } from "../../../../src/types/router";
 
 dotenv.config();
 // RPC URL for the EVM network, you can change this to the RPC URL of your choice

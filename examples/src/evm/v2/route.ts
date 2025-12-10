@@ -1,6 +1,5 @@
-import { Router as FibrousRouter, IntegrationData } from "../../../../src";
+import { Router as FibrousRouter, getBestRouteParams } from "fibrous-router-sdk";
 import { parseUnits } from "ethers";
-import { getBestRouteParams } from "../../../../src/types/router";
 import dotenv from "dotenv";
 dotenv.config();
 async function main() {

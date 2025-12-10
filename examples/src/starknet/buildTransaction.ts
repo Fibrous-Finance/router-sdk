@@ -7,10 +7,16 @@ import "dotenv/config";
 import { account } from "./account";
 import { humanReadableStarknetSwapCallDataLog } from "../utils/humanReadableStarknetLog";
 
+
+// IMPORTANT: This example is for the legacy version of the Fibrous Router SDK (v0.6.x)
+// Please use the new version of the Fibrous Router SDK (v1.0.0) for the new features
+// You can find the new version of the Fibrous Router SDK in the examples/src/starknet/v2 directory
+
 const PUBLIC_KEY = process.env.STARKNET_PUBLIC_KEY;
 const PRIVATE_KEY = process.env.STARKNET_PRIVATE_KEY;
 const RPC_URL = process.env.STARKNET_RPC_URL;
 const DESTINATION = process.env.STARKNET_PUBLIC_KEY; // The address to receive the tokens after the swap is completed (required)
+
 
 async function main() {
     // Create a new router instance

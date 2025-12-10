@@ -4,7 +4,7 @@
   </a>
 </p>
 
-# Fibrous Finance SDK (v0.6.3)
+# Fibrous Finance SDK (v1.0.0)
 
 ## Installation
 
@@ -46,6 +46,10 @@ If you're upgrading from v0.5.x, please review our [Migration Guide](./docs/MIGR
 Check out the [Starknet examples](./examples/src/starknet/) and [Starknet README](./examples/src/starknet/README.md) for more detailed examples.
 
 Check out the [Evm examples](./examples/src/evm/) and [Evm README](./examples/src/evm/README.md) for more detailed examples.
+
+## Pre-Release Testing
+
+If you want to test pre-release versions before production, check out our [Pre-Release Testing Guide](./docs/PRE_RELEASE_TESTING.md) for detailed instructions.
 
 
 ## Contributing

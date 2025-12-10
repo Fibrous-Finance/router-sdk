@@ -1,5 +1,10 @@
 import { Router as FibrousRouter } from "fibrous-router-sdk";
 import { parseUnits } from "ethers";
+
+// IMPORTANT: This example is for the legacy version of the Fibrous Router SDK (v0.6.x)
+// Please use the new version of the Fibrous Router SDK (v1.0.0) for the new features
+// You can find the new version of the Fibrous Router SDK in the examples/src/evm/v2 directory
+
 async function main() {
     // Create a new router instance
     const fibrous = new FibrousRouter();

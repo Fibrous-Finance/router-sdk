@@ -1,9 +1,8 @@
-import { Router as FibrousRouter } from "../../../../src";
+import { Router as FibrousRouter, buildBatchTransactionParams } from "fibrous-router-sdk";
 import { Call } from "starknet";
 import { parseUnits } from "ethers";
 
 import { account } from "../account";
-import { buildBatchTransactionParams } from "../../../../src/types/router";
 import dotenv from "dotenv";
 dotenv.config();    
 async function main() {
