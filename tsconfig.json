@@ -1,65 +1,25 @@
 {
   "compilerOptions": {
-    /* Language and Environment */
-    "target": "ES2022",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "allowJs": true,
-    "checkJs": false,
-
-    /* Type Checking - Completely Flexible */
-    "strict": false,
-    "noImplicitAny": false,
-    "strictNullChecks": false,
-    "strictFunctionTypes": false,
-    "strictBindCallApply": false,
-    "strictPropertyInitialization": false,
-    "noImplicitThis": false,
-    "noImplicitReturns": false,
-    "noFallthroughCasesInSwitch": false,
-    "noUncheckedIndexedAccess": false,
-    "allowUnusedLabels": true,
-    "allowUnreachableCode": true,
-    "exactOptionalPropertyTypes": false,
-    "noImplicitOverride": false,
-    "noPropertyAccessFromIndexSignature": false,
-
-    /* Additional Flexibility */
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-
-    /* Emit */
+    "target": "ES2020",
+    "lib": [
+      "ES2020",
+      "es7",
+      "es6",
+      "dom"
+    ],
+    "module": "commonjs",
     "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
     "outDir": "dist",
-    "removeComments": false,
-    "noEmitOnError": false,
-    "noEmit": false,
-    "preserveConstEnums": true,
-
-    /* Interop Constraints */
-    "allowSyntheticDefaultImports": true,
+    "downlevelIteration": true,
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": false,
-    "allowImportingTsExtensions": false,
-
-    /* Completeness */
-    "skipLibCheck": true,
-    "skipDefaultLibCheck": true
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true
   },
-  "include": ["src/**/*"],
+  "include": [
+    "src/**/*"
+  ],
   "exclude": [
-    "node_modules",
-    "dist",
-    "examples",
-    "tests",
-    "**/*.test.ts",
-    "**/*.spec.ts",
-    "**/coverage",
-    "**/.DS_Store"
+    "node_modules"
   ]
 }
