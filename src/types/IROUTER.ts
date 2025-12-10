@@ -172,4 +172,12 @@ export interface IRouter {
      * @throws ChainNotSupportedError if chain is not supported or is Starknet.
      */
     getContractWAccount(account: Wallet, chainId: number | string): Promise<Contract>;
+
+    /**
+     * Gets the router address for a given chain.
+     * @param chainNameOrId Chain name (e.g. "starknet", "scroll") or chain ID.
+     * @returns Router address for the chain.
+     * @throws ChainNotSupportedError if chain is not supported.
+     */
+    getRouterAddress(chainNameOrId: string | number): Promise<string>;
 }

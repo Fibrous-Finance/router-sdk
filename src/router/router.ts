@@ -894,4 +894,15 @@ export class Router implements IRouter {
         await approveTx.wait();
         return true;
     }
+
+    /**
+     * Gets the router address for a given chain
+     * @param chainNameOrId Chain name (e.g. "starknet") or chain ID
+     * @returns Router address for the chain
+     */
+    async getRouterAddress(chainNameOrId: string | number): Promise<string> {
+        await this.ensureChainsLoaded();
+        const chain = this.getChain(chainNameOrId);
+        return chain.router_address;
+    }
 }

@@ -1,9 +1,8 @@
 {
   "name": "fibrous-router-sdk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A Javascript SDK for Fibrous Finance",
-  "type": "module",
-  "main": "dist/index.cjs",
+  "main": "dist/index.js",
   "module": "dist/index.m.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -13,7 +12,7 @@
     },
     "require": {
       "types": "./dist/index.d.ts",
-      "default": "./dist/index.cjs"
+      "default": "./dist/index.js"
     },
     "default": "./dist/index.m.js"
   },
@@ -30,7 +29,9 @@
     "build": "rimraf dist && microbundle --tsconfig tsconfig.json",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "version:beta": "pnpm version prerelease --preid beta",
+    "publish:beta": "pnpm build && pnpm publish --tag beta --no-git-checks"
   },
   "keywords": [],
   "author": "kermo kermo@fibrous.com",
@@ -57,5 +58,6 @@
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "packageManager": "pnpm@10.20.0+sha512.cf9998222162dd85864d0a8102e7892e7ba4ceadebbf5a31f9c2fce48dfce317a9c53b9f6464d1ef9042cba2e02ae02a9f7c143a2b438cd93c91840f0192b9dd"
 }
