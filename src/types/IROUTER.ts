@@ -1,13 +1,14 @@
 import { Wallet, Contract } from "ethers";
 import { Call } from "starknet";
-import {
-    AmountType,
-    ProtocolId,
-    RouteResponse,
-    Token,
-} from "./index";
+import { AmountType, ProtocolId, RouteResponse, Token } from "./index";
 import { CHAIN_MAP } from "./types";
-import { buildBatchTransactionParams, buildRouteAndCalldataParams, buildTransactionParams, getBestRouteBatchParams, getBestRouteParams } from "./router";
+import {
+    buildBatchTransactionParams,
+    buildRouteAndCalldataParams,
+    buildTransactionParams,
+    getBestRouteBatchParams,
+    getBestRouteParams,
+} from "./router-params";
 
 export interface IRouter {
     /**
@@ -41,9 +42,7 @@ export interface IRouter {
      * @returns Route response.
      * @throws Error if the chain is not supported.
      */
-    getBestRoute(
-        params: getBestRouteParams,
-    ): Promise<RouteResponse>;
+    getBestRoute(params: getBestRouteParams): Promise<RouteResponse>;
 
     /**
      * Fetches best routes in batch for multiple inputs.
@@ -63,7 +62,9 @@ export interface IRouter {
      * @param chainNameOrId Chain name (e.g. "starknet", "scroll") or chain ID.
      * @returns Map of lowercased symbol -> Token.
      */
-    supportedTokens(chainNameOrId: string | number): Promise<Map<string, Token>>;
+    supportedTokens(
+        chainNameOrId: string | number,
+    ): Promise<Map<string, Token>>;
 
     /**
      * Returns token details by address.
@@ -73,14 +74,19 @@ export interface IRouter {
      * @throws ChainNotSupportedError if chain is not supported.
      * @throws APIError if token is not found or API request fails.
      */
-    getToken(tokenAddress: string, chainNameOrId: string | number): Promise<Token>;
+    getToken(
+        tokenAddress: string,
+        chainNameOrId: string | number,
+    ): Promise<Token>;
 
     /**
      * Returns supported protocols.
      * @param chainNameOrId Chain name (e.g. "starknet", "scroll") or chain ID.
      * @returns Mapping of AMM name -> protocol identifier.
      */
-    supportedProtocols(chainNameOrId: string | number): Promise<Record<string, ProtocolId>>;
+    supportedProtocols(
+        chainNameOrId: string | number,
+    ): Promise<Record<string, ProtocolId>>;
 
     /**
      * Builds Starknet approve call parameters.
@@ -120,9 +126,7 @@ export interface IRouter {
      * @param chainId Chain ID (for backward compatibility).
      * @returns Starknet `Call` or EVM calldata/transaction structure.
      */
-    buildTransaction(
-        params: buildTransactionParams,
-    ): Promise<Call | unknown>;
+    buildTransaction(params: buildTransactionParams): Promise<Call | unknown>;
 
     /**
      * Returns the best route and executable calldata in a single call.
@@ -162,7 +166,10 @@ export interface IRouter {
      * @returns Contract instance for EVM networks (ethers.Contract).
      * @throws ChainNotSupportedError if chain is not supported or is Starknet.
      */
-    getContractInstance(rpcUrl: string, chainId: number | string): Promise<Contract>;
+    getContractInstance(
+        rpcUrl: string,
+        chainId: number | string,
+    ): Promise<Contract>;
 
     /**
      * (EVM) Returns a router contract instance ready to sign with the given wallet.
@@ -171,7 +178,10 @@ export interface IRouter {
      * @returns Contract instance for EVM networks (ethers.Contract).
      * @throws ChainNotSupportedError if chain is not supported or is Starknet.
      */
-    getContractWAccount(account: Wallet, chainId: number | string): Promise<Contract>;
+    getContractWAccount(
+        account: Wallet,
+        chainId: number | string,
+    ): Promise<Contract>;
 
     /**
      * Gets the router address for a given chain.
