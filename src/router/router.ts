@@ -30,7 +30,13 @@ import { ethers, Wallet, Contract } from "ethers";
 import { Call } from "starknet";
 import { CHAIN_MAP } from "../types/";
 import { IRouter } from "../types";
-import { buildBatchTransactionParams, buildRouteAndCalldataParams, buildTransactionParams, getBestRouteBatchParams, getBestRouteParams } from "../types/router";
+import {
+    buildBatchTransactionParams,
+    buildRouteAndCalldataParams,
+    buildTransactionParams,
+    getBestRouteBatchParams,
+    getBestRouteParams,
+} from "../types/router-params";
 
 export class Router implements IRouter {
     readonly DEFAULT_API_URL = "https://api.fibrous.finance";
@@ -128,7 +134,6 @@ export class Router implements IRouter {
         return chain;
     }
 
-
     /**
      * @param chainName Chain ID to get the supported tokens for
      * @returns Supported token list
@@ -147,7 +152,7 @@ export class Router implements IRouter {
                     headers: buildHeaders(this.apiKey),
                 },
             );
-            
+
             if (!response.ok) {
                 throw new APIError(
                     `Failed to fetch supported tokens: ${response.status} ${response.statusText}`,
@@ -155,7 +160,7 @@ export class Router implements IRouter {
                     response.statusText,
                 );
             }
-            
+
             const tokens: Token[] = await response.json();
 
             // Create a record of tokens by symbol
@@ -207,7 +212,7 @@ export class Router implements IRouter {
                     headers: buildHeaders(this.apiKey),
                 },
             );
-            
+
             if (!response.ok) {
                 throw new APIError(
                     `Failed to fetch token: ${response.status} ${response.statusText}`,
@@ -215,7 +220,7 @@ export class Router implements IRouter {
                     response.statusText,
                 );
             }
-            
+
             const token: Token = await response.json();
             return token;
         } catch (error) {
@@ -246,10 +251,13 @@ export class Router implements IRouter {
         const chainName = chain.chain_name;
 
         try {
-            const response = await fetch(`${this.GRAPH_API_URL}/${chainName}/protocols`, {
-                headers: buildHeaders(this.apiKey),
-            });
-            
+            const response = await fetch(
+                `${this.GRAPH_API_URL}/${chainName}/protocols`,
+                {
+                    headers: buildHeaders(this.apiKey),
+                },
+            );
+
             if (!response.ok) {
                 throw new APIError(
                     `Failed to fetch supported protocols: ${response.status} ${response.statusText}`,
@@ -257,13 +265,15 @@ export class Router implements IRouter {
                     response.statusText,
                 );
             }
-            
+
             const protocols: { amm_name: string; protocol: ProtocolId }[] =
                 await response.json();
 
             return protocols.reduce(
                 (acc, protocol) =>
-                    Object.assign(acc, { [protocol.amm_name]: protocol.protocol }),
+                    Object.assign(acc, {
+                        [protocol.amm_name]: protocol.protocol,
+                    }),
                 {},
             );
         } catch (error) {
@@ -283,7 +293,6 @@ export class Router implements IRouter {
         }
     }
 
-
     /**
      * Gets the best route from the API
      * @param amount: Amount to swap, formatted
@@ -293,9 +302,7 @@ export class Router implements IRouter {
      * @returns Route response
      * @throws Error if the API returns an error
      */
-    async getBestRoute(
-        params: getBestRouteParams,
-    ): Promise<RouteResponse> {
+    async getBestRoute(params: getBestRouteParams): Promise<RouteResponse> {
         // Validate inputs
         validateAmount(params.amount, "amount");
         if (params.integrationData) {
@@ -322,20 +329,21 @@ export class Router implements IRouter {
                 routeParams.direct = params.options.direct;
             }
             if (params.options.excludeProtocols) {
-                routeParams.excludeProtocols = params.options.excludeProtocols.join(",");
+                routeParams.excludeProtocols =
+                    params.options.excludeProtocols.join(",");
             }
         }
 
         const routeUrl = buildRouteUrl(
-            `${this.apiUrl}/${chain.chain_name}${this.apiVersion ? `/${this.apiVersion}` : ''}/route`,
+            `${this.apiUrl}/${chain.chain_name}${this.apiVersion ? `/${this.apiVersion}` : ""}/route`,
             routeParams,
         );
-        
+
         try {
             const response = await fetch(routeUrl, {
                 headers: buildHeaders(this.apiKey),
             });
-            
+
             if (!response.ok) {
                 throw new APIError(
                     `Failed to fetch route: ${response.status} ${response.statusText}`,
@@ -343,7 +351,7 @@ export class Router implements IRouter {
                     response.statusText,
                 );
             }
-            
+
             const data = await response.json();
             return data as RouteResponse;
         } catch (error) {
@@ -395,12 +403,13 @@ export class Router implements IRouter {
                 routeParams.direct = params.options.direct;
             }
             if (params.options.excludeProtocols) {
-                routeParams.excludeProtocols = params.options.excludeProtocols.join(",");
+                routeParams.excludeProtocols =
+                    params.options.excludeProtocols.join(",");
             }
         }
 
         const routeUrl = buildRouteUrlBatch(
-            `${this.apiUrl}/${chain.chain_name}${this.apiVersion ? `/${this.apiVersion}` : ''}/routeBatch`,
+            `${this.apiUrl}/${chain.chain_name}${this.apiVersion ? `/${this.apiVersion}` : ""}/routeBatch`,
             routeParams,
         );
 
@@ -408,7 +417,7 @@ export class Router implements IRouter {
             const response = await fetch(routeUrl, {
                 headers: buildHeaders(this.apiKey),
             });
-            
+
             if (!response.ok) {
                 throw new APIError(
                     `Failed to fetch batch routes: ${response.status} ${response.statusText}`,
@@ -416,7 +425,7 @@ export class Router implements IRouter {
                     response.statusText,
                 );
             }
-            
+
             const data = await response.json();
             return data as RouteResponse[];
         } catch (error) {
@@ -435,8 +444,6 @@ export class Router implements IRouter {
             );
         }
     }
-
-
 
     /**
      * Builds a Starknet, Scroll or Base transaction out of the route response
@@ -477,20 +484,21 @@ export class Router implements IRouter {
                 routeParams.direct = params.options.direct;
             }
             if (params.options.excludeProtocols) {
-                routeParams.excludeProtocols = params.options.excludeProtocols.join(",");
+                routeParams.excludeProtocols =
+                    params.options.excludeProtocols.join(",");
             }
         }
         const routeUrl = buildRouteUrl(
-            `${this.apiUrl}/${chain.chain_name}${this.apiVersion ? `/${this.apiVersion}` : ''}/route`,
+            `${this.apiUrl}/${chain.chain_name}${this.apiVersion ? `/${this.apiVersion}` : ""}/route`,
             routeParams,
         );
-        
+
         let route: RouteResponse;
         try {
             const routeResponse = await fetch(routeUrl, {
                 headers: buildHeaders(this.apiKey),
             });
-            
+
             if (!routeResponse.ok) {
                 throw new APIError(
                     `Failed to fetch route: ${routeResponse.status} ${routeResponse.statusText}`,
@@ -498,7 +506,7 @@ export class Router implements IRouter {
                     routeResponse.statusText,
                 );
             }
-            
+
             route = await routeResponse.json();
         } catch (error) {
             if (error instanceof APIError) {
@@ -515,14 +523,14 @@ export class Router implements IRouter {
                 error,
             );
         }
-        
+
         const calldataParams = {
             route: route,
             destination: params.destination,
             slippage: params.slippage,
         };
-        const calldataUrl = `${this.apiUrl}/${chain.chain_name}${this.apiVersion ? `/${this.apiVersion}` : ''}/calldata`;
-        
+        const calldataUrl = `${this.apiUrl}/${chain.chain_name}${this.apiVersion ? `/${this.apiVersion}` : ""}/calldata`;
+
         try {
             const calldataResponse = await fetch(calldataUrl, {
                 method: "POST",
@@ -532,7 +540,7 @@ export class Router implements IRouter {
                 },
                 body: JSON.stringify(calldataParams),
             });
-            
+
             if (!calldataResponse.ok) {
                 throw new APIError(
                     `Failed to fetch calldata: ${calldataResponse.status} ${calldataResponse.statusText}`,
@@ -540,9 +548,9 @@ export class Router implements IRouter {
                     calldataResponse.statusText,
                 );
             }
-            
+
             const calldata = await calldataResponse.json();
-            
+
             if (chain.chain_name === "starknet") {
                 return {
                     contractAddress: chain.router_address,
@@ -613,24 +621,29 @@ export class Router implements IRouter {
                 routeParams.direct = params.options.direct;
             }
             if (params.options.excludeProtocols) {
-                routeParams.excludeProtocols = params.options.excludeProtocols.join(",");
+                routeParams.excludeProtocols =
+                    params.options.excludeProtocols.join(",");
             }
         }
 
         let calldataUrl = buildRouteUrl(
-            `${this.apiUrl}/${chain.chain_name}${this.apiVersion ? `/${this.apiVersion}` : ''}/routeAndCalldata`,
+            `${this.apiUrl}/${chain.chain_name}${this.apiVersion ? `/${this.apiVersion}` : ""}/routeAndCalldata`,
             routeParams,
         );
 
-        if(chain.chain_name === "starknet") { // for starknet, the calldata will be deleted in the future
-            calldataUrl =buildRouteUrl( `${this.apiUrl}/${chain.chain_name}/calldata`, routeParams);
+        if (chain.chain_name === "starknet") {
+            // for starknet, the calldata will be deleted in the future
+            calldataUrl = buildRouteUrl(
+                `${this.apiUrl}/${chain.chain_name}/calldata`,
+                routeParams,
+            );
         }
-        
+
         try {
             const calldataResponse = await fetch(calldataUrl, {
                 headers: buildHeaders(this.apiKey),
             });
-            
+
             if (!calldataResponse.ok) {
                 throw new APIError(
                     `Failed to fetch route and calldata: ${calldataResponse.status} ${calldataResponse.statusText}`,
@@ -638,7 +651,7 @@ export class Router implements IRouter {
                     calldataResponse.statusText,
                 );
             }
-            
+
             const data = await calldataResponse.json();
 
             if (chain.chain_name === "starknet") {
@@ -679,7 +692,6 @@ export class Router implements IRouter {
     async buildBatchTransaction(
         params: buildBatchTransactionParams,
     ): Promise<Call[]> {
-
         validateSlippage(params.slippage, "slippage");
         if (params.integrationData) {
             validateIntegrationData(params.integrationData);
@@ -707,20 +719,21 @@ export class Router implements IRouter {
                 routeParams.direct = params.options.direct;
             }
             if (params.options.excludeProtocols) {
-                routeParams.excludeProtocols = params.options.excludeProtocols.join(",");
+                routeParams.excludeProtocols =
+                    params.options.excludeProtocols.join(",");
             }
         }
 
         const routeUrl = buildRouteUrlBatch(
-            `${this.apiUrl}/${chain.chain_name}${this.apiVersion ? `/${this.apiVersion}` : ''}/executeBatch`,
+            `${this.apiUrl}/${chain.chain_name}${this.apiVersion ? `/${this.apiVersion}` : ""}/executeBatch`,
             routeParams,
         );
-        
+
         try {
             const response = await fetch(routeUrl, {
                 headers: buildHeaders(this.apiKey),
             });
-            
+
             if (!response.ok) {
                 throw new APIError(
                     `Failed to fetch batch transaction: ${response.status} ${response.statusText}`,
@@ -728,17 +741,19 @@ export class Router implements IRouter {
                     response.statusText,
                 );
             }
-            
+
             const calldata = await response.json();
 
             if (chain.chain_name === "starknet") {
-                const swapCalls: Call[] = (calldata as string[][]).map((call: string[]) => {
-                    return {
-                        contractAddress: chain.router_address,
-                        entrypoint: "swap",
-                        calldata: call,
-                    };
-                });
+                const swapCalls: Call[] = (calldata as string[][]).map(
+                    (call: string[]) => {
+                        return {
+                            contractAddress: chain.router_address,
+                            entrypoint: "swap",
+                            calldata: call,
+                        };
+                    },
+                );
                 return swapCalls;
             } else {
                 throw new ChainNotSupportedError(
@@ -746,7 +761,10 @@ export class Router implements IRouter {
                 );
             }
         } catch (error) {
-            if (error instanceof APIError || error instanceof ChainNotSupportedError) {
+            if (
+                error instanceof APIError ||
+                error instanceof ChainNotSupportedError
+            ) {
                 throw error;
             }
             if (error instanceof SyntaxError) {
@@ -829,10 +847,10 @@ export class Router implements IRouter {
     }
 
     /**
-  * Builds a Starknet approve transaction
-  * @param amount: Amount to approve, formatted
-  * @param tokenAddress: Token to approve
-  */
+     * Builds a Starknet approve transaction
+     * @param amount: Amount to approve, formatted
+     * @param tokenAddress: Token to approve
+     */
     async buildApproveStarknet(
         amount: AmountType,
         tokenAddress: string,
